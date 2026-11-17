@@ -1,6 +1,6 @@
 # MechScope 3D: How It Works
 
-An offline mechanical anatomy studio by **F7 Developer**, with nineteen interactive mechanisms built from procedural geometry and deterministic kinematics. The flagship is **ARACHNE SC–08**, an original eight-legged robotic spider.
+An offline mechanical anatomy studio by **F7 Developer**, with twenty interactive mechanisms built from procedural geometry and deterministic kinematics. The flagship is **ARACHNE SC–08**, an original eight-legged robotic spider.
 
 | Mechanism | Focus |
 |---|---|
@@ -23,6 +23,7 @@ An offline mechanical anatomy studio by **F7 Developer**, with nineteen interact
 | ORBIT P3 | Three-planet epicyclic transmission and visible carrier drive |
 | TITAN S6 | Six-wheel steam locomotive, quartered cranks and coupling rods |
 | CHRONOS T3 | Open tourbillon movement, rotating cage and oscillating balance |
+| DRACONIS D6 | Winged dragon: four digitigrade IK legs, folding membrane wings, 34 vertebrae and a six-act choreography |
 
 ## Release status
 
@@ -32,7 +33,7 @@ The production Gradle variant refuses to build without real advertising configur
 
 ## The experience
 
-- **Explore:** Nineteen PBR procedural mechanisms, environment reflections, studio lighting, shadows, 360° orbit, pinch zoom, camera presets and immersive view. Playback and camera controls stay outside the canvas; compact statistics preserve viewer space.
+- **Explore:** Twenty PBR procedural mechanisms, environment reflections, studio lighting, shadows, 360° orbit, pinch zoom, camera presets and immersive view. Playback and camera controls stay outside the canvas; compact statistics preserve viewer space.
 - **Anatomy:** Select model components or search the component index; inspect purpose, mechanism, material and live readouts. Solid, X-ray and section modes.
 - **How it works:** Five measured, model-specific lessons per mechanism, linked to camera, material and explosion states.
 - **Exploded:** Continuously separate and reassemble subassemblies without switching to a video or another model.
@@ -63,7 +64,7 @@ Application source is MIT. Supplied F7 Developer brand assets and trademarks are
 src/catalog.js          mechanism descriptors and lazy geometry loading
 src/spider/kin.js        pure math, design dimensions, trajectories and lessons
 src/spider/model.js      procedural geometry, component metadata, posed assemblies
-src/mechanisms/          eighteen additional descriptors, samplers and geometry models
+src/mechanisms/          nineteen additional descriptors, samplers and geometry models
 src/viewer/stage.js      Three.js lighting, environment, camera, picking and quality
 src/main.js             mobile interface, state, settings and native bridge
 src/style.css           responsive light/dark interface
@@ -143,6 +144,6 @@ The same runner can attach to a **debug** MechScope Android WebView using an exp
 
 The target US base price for the permanent `remove_ads` product is **$4.99**, configured in Play Console. Checkout uses the localized price provided by Google Play; the UI does not fabricate a price or entitlement when configuration is missing. Restored purchases require a valid signature and correct package/product/state. Pending purchases are not granted. Signed acknowledged receipts support offline access but cannot detect refunds or account changes until reconnection.
 
-Consent is required before ads can be requested. Banners occupy a native container outside the viewer and above system-navigation insets. Interstitials are limited to a collection transition, never shown on first launch, and rate-limited to at least three minutes. Rewarded ads are explicitly requested and grant a 15-minute ad break in the current app session only from the SDK's earned-reward callback. They never change rendering quality or unlock settings. All nineteen offline mechanisms remain available without watching an ad.
+Consent is required before ads can be requested. Banners occupy a native container outside the viewer and above system-navigation insets. Interstitials are limited to a collection transition, never shown on first launch, and rate-limited to at least three minutes. Rewarded ads are explicitly requested and grant a 15-minute ad break in the current app session only from the SDK's earned-reward callback. They never change rendering quality or unlock settings. All twenty offline mechanisms remain available without watching an ad.
 
 For production hardening, add a secure Play Developer API purchase-verification backend and real-time developer notifications, complete policy review and test actual purchase/cancellation/refund/restore flows on a Play test track.

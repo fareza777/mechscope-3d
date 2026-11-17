@@ -1,5 +1,9 @@
 # Verification and device evidence
 
+## DRACONIS D6 addition: 17 November 2026
+
+The twentieth mechanism (winged dragon) was verified in a Linux container: `npm test` (223 pass, 1 skipped WebGL gate), `npm run build`, and `pose-qa.mjs` restricted to `dragon` in headless Chromium with SwiftShader (24 rendered poses fit the home camera). `collection-qa.mjs` and native Android runs were **not** repeated for this addition. The stage now accepts optional `framePoints` from a model so the home camera fits whole-cycle geometry of shape-changing mechanisms; models without it keep the previous box fit.
+
 ## Current nineteen-mechanism verification: 17 November 2026
 
 The collection was expanded from nine to nineteen mechanisms. The following local results were recorded against the final source and production bundle:

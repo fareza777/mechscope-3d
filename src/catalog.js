@@ -17,6 +17,7 @@ import { descriptor as radialEngine } from './mechanisms/radial-engine/index.js'
 import { descriptor as planetary } from './mechanisms/planetary/index.js';
 import { descriptor as steamLocomotive } from './mechanisms/steam-locomotive/index.js';
 import { descriptor as tourbillon } from './mechanisms/tourbillon/index.js';
+import { descriptor as dragon } from './mechanisms/dragon/index.js';
 
 export const MECHANISMS = Object.freeze([
   {
@@ -59,4 +60,5 @@ export const MECHANISMS = Object.freeze([
   planetary,
   steamLocomotive,
   tourbillon,
+  dragon,
 ]);
