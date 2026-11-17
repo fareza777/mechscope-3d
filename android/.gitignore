@@ -1,0 +1,9 @@
+/.gradle/
+/.inspection/
+/build/
+/app/build/
+/local.properties
+/production.properties
+*.jks
+*.keystore
+*.p12

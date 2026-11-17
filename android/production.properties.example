@@ -1,0 +1,17 @@
+# Copy to ignored production.properties. Never put signing passwords here.
+# These are public application configuration, not a service-account credential.
+ADMOB_APP_ID=
+ADMOB_BANNER_ID=
+ADMOB_INTERSTITIAL_ID=
+ADMOB_REWARDED_ID=
+# Base64 RSA licensing PUBLIC key from this app's Play Console (never a private key).
+PLAY_BILLING_PUBLIC_KEY=
+PRIVACY_POLICY_URL=
+# Set only after configuring the published policy, UMP messages, audience,
+# Data Safety and ads declarations, and the non-consumable remove_ads product
+# at USD 4.99 (localized prices are queried from Google Play at runtime).
+PLAY_PRODUCT_READY=false
+UMP_CONFIGURED=false
+# Release signing is read ONLY from MECHSCOPE_KEYSTORE, MECHSCOPE_STORE_PASSWORD,
+# MECHSCOPE_KEY_ALIAS and MECHSCOPE_KEY_PASSWORD environment variables.
+# Debug/qa always use Google's test ad IDs and never fake purchases.

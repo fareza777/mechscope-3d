@@ -1,0 +1,16 @@
+node_modules/
+dist/
+android/.gradle/
+android/**/build/
+android/local.properties
+android/production.properties
+android/app/src/main/assets/web/
+android/keystore.properties
+*.jks
+*.keystore
+.env*
+!.env.example
+qa/
+releases/
+playwright-report/
+test-results/

@@ -1,0 +1,125 @@
+plugins { id 'com.android.application' }
+
+// No sample IDs are ever substituted into a release build.
+def productionProperties = new Properties()
+def configFile = rootProject.file('production.properties')
+if (configFile.exists()) configFile.withInputStream { productionProperties.load(it) }
+def config = { String name -> (System.getenv(name) ?: productionProperties.getProperty(name, '')).trim() }
+def quoted = { String value -> groovy.json.JsonOutput.toJson(value) }
+def signing = ['MECHSCOPE_KEYSTORE', 'MECHSCOPE_STORE_PASSWORD', 'MECHSCOPE_KEY_ALIAS', 'MECHSCOPE_KEY_PASSWORD']
+def signingPresent = signing.every { System.getenv(it) }
+
+android {
+    namespace 'dev.f7.mechscope'
+    compileSdk 36
+    buildToolsVersion '36.0.0'
+    defaultConfig {
+        applicationId 'dev.f7.mechscope'
+        minSdk 26
+        targetSdk 36
+        versionCode 1
+        versionName '1.0.0'
+        resourceConfigurations += ['en']
+        buildConfigField 'String', 'PLAY_BILLING_PUBLIC_KEY', quoted(config('PLAY_BILLING_PUBLIC_KEY'))
+        buildConfigField 'String', 'PRIVACY_POLICY_URL', quoted(config('PRIVACY_POLICY_URL'))
+        buildConfigField 'String', 'REMOVE_ADS_PRODUCT', '"remove_ads"'
+    }
+    signingConfigs {
+        if (signingPresent) {
+            production {
+                storeFile rootProject.file(System.getenv('MECHSCOPE_KEYSTORE'))
+                storePassword System.getenv('MECHSCOPE_STORE_PASSWORD')
+                keyAlias System.getenv('MECHSCOPE_KEY_ALIAS')
+                keyPassword System.getenv('MECHSCOPE_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            versionNameSuffix '-debug'
+            buildConfigField 'boolean', 'PRODUCTION', 'false'
+            buildConfigField 'String', 'AD_MODE', '"test"'
+            manifestPlaceholders.admobAppId = 'ca-app-pub-3940256099942544~3347511713'
+            buildConfigField 'String', 'BANNER_ID', '"ca-app-pub-3940256099942544/6300978111"'
+            buildConfigField 'String', 'INTERSTITIAL_ID', '"ca-app-pub-3940256099942544/1033173712"'
+            buildConfigField 'String', 'REWARDED_ID', '"ca-app-pub-3940256099942544/5224354917"'
+        }
+        qa {
+            initWith debug
+            debuggable false
+            versionNameSuffix '-qa'
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ['debug']
+        }
+        release {
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField 'boolean', 'PRODUCTION', 'true'
+            buildConfigField 'String', 'AD_MODE', '"production"'
+            manifestPlaceholders.admobAppId = config('ADMOB_APP_ID')
+            buildConfigField 'String', 'BANNER_ID', quoted(config('ADMOB_BANNER_ID'))
+            buildConfigField 'String', 'INTERSTITIAL_ID', quoted(config('ADMOB_INTERSTITIAL_ID'))
+            buildConfigField 'String', 'REWARDED_ID', quoted(config('ADMOB_REWARDED_ID'))
+            if (signingPresent) signingConfig signingConfigs.production
+        }
+    }
+    buildFeatures { buildConfig true }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    lint { abortOnError true; checkReleaseBuilds true }
+}
+
+// Fail before any release task executes, including direct bundle/package tasks.
+// Runtime checks cannot prove ownership or Play approval: Console review remains mandatory.
+gradle.taskGraph.whenReady { graph ->
+    if (graph.allTasks.any { it.project == project && it.name.toLowerCase().contains('release') }) {
+        def errors = []
+        ['ADMOB_APP_ID', 'ADMOB_BANNER_ID', 'ADMOB_INTERSTITIAL_ID', 'ADMOB_REWARDED_ID'].each { key ->
+            def value = config(key)
+            def pattern = key == 'ADMOB_APP_ID' ? /ca-app-pub-\d{16}~\d{10}/ : /ca-app-pub-\d{16}\/\d{10}/
+            if (!(value ==~ pattern) || value.contains('3940256099942544') || value.contains('0000000000')) errors.add(key)
+        }
+        def units = ['ADMOB_BANNER_ID', 'ADMOB_INTERSTITIAL_ID', 'ADMOB_REWARDED_ID'].collect { config(it) }
+        if (units.toSet().size() != 3) errors.add('distinct real ad units')
+        try {
+            def key = java.security.KeyFactory.getInstance('RSA').generatePublic(
+                new java.security.spec.X509EncodedKeySpec(Base64.decoder.decode(config('PLAY_BILLING_PUBLIC_KEY'))))
+            if (((java.security.interfaces.RSAPublicKey) key).modulus.bitLength() < 2048) errors.add('2048-bit Play public key')
+        } catch (Exception ignored) { errors.add('PLAY_BILLING_PUBLIC_KEY') }
+        try {
+            def uri = new URI(config('PRIVACY_POLICY_URL'))
+            if (uri.scheme != 'https' || !uri.host || !uri.host.contains('.') || uri.userInfo ||
+                    !(uri.port in [-1, 443]) || uri.host ==~ /(?i).*(example\.(com|org|net)|localhost|\.local)$/) {
+                errors.add('published HTTPS PRIVACY_POLICY_URL')
+            }
+        } catch (Exception ignored) { errors.add('PRIVACY_POLICY_URL') }
+        if (config('PLAY_PRODUCT_READY') != 'true') errors.add('PLAY_PRODUCT_READY')
+        if (config('UMP_CONFIGURED') != 'true') errors.add('UMP_CONFIGURED')
+        if (!signingPresent || !rootProject.file(System.getenv('MECHSCOPE_KEYSTORE') ?: '__unset__').isFile()) {
+            errors.add('production signing environment')
+        }
+        if (!errors.isEmpty()) throw new GradleException('Production build blocked. Configure: ' + errors.join(', ') + '. Use assembleQa / bundleQa for NON-PRODUCTION testing.')
+    }
+}
+
+def verifyWebBundle = tasks.register('verifyWebBundle') {
+    doLast {
+        if (!file('src/main/assets/web/index.html').isFile()) {
+            throw new GradleException('Parent must supply the offline web bundle at app/src/main/assets/web/index.html before building. Use relative asset URLs; no CDN dependencies.')
+        }
+    }
+}
+tasks.configureEach { task ->
+    if (task.name == 'preBuild') task.dependsOn(verifyWebBundle)
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.14.0'
+    implementation 'com.google.android.gms:play-services-ads:25.4.0'
+    implementation 'com.google.android.ump:user-messaging-platform:4.0.0'
+    implementation 'com.android.billingclient:billing:8.3.0'
+}

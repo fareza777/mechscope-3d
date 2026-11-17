@@ -1,0 +1,23 @@
+{
+  "name": "mechscope-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MechScope 3D: How It Works — interactive mechanical anatomy by F7 Developer",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test tests/*.test.mjs",
+    "sync:android": "node scripts/sync-android.mjs"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "vite": "8.3.8"
+  }
+}
