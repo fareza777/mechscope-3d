@@ -1,0 +1,35 @@
+import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
+
+export const descriptor = {
+  id: 'mammut', title: 'MAMMUT M4', family: 'Quadrupedal Mammoth Mechanism', collection: '021',
+  tagline: 'Four planted legs and a fourteen-link trunk that never stretches.',
+  description: 'A mammoth-shaped mechanical anatomy study: four inverse-kinematic legs, an eight-vertebra spine, sixteen open ribs, a fourteen-link curling trunk, a seven-link tail and two rigid tusks. Every rigid pin spacing is exact and the trunk cap stays at its solved length; muscle force, ground pressure and balance are not simulated, and the pale shells are artistic representations.',
+  defaultInputs: DEFAULT_INPUTS,
+  controls: [
+    { key: 'cadence', label: 'Walk cadence', min: 0.12, max: 0.7, step: 0.01, unit: 'Hz', precision: 2 },
+    { key: 'stride', label: 'Foot travel', min: 0.08, max: 0.26, step: 0.01, unit: 'm', precision: 2 },
+    { key: 'curl', label: 'Trunk curl', min: 0, max: 35, step: 1, unit: '°', precision: 0 },
+    { key: 'ear', label: 'Ear flare', min: 0, max: 35, step: 1, unit: '°', precision: 0 },
+  ],
+  specs: [{ value: '33', label: 'RIGID LINKS' }, { value: '1190', label: 'TRUNK · MM' }],
+  cycleLabel: 'HERD GAIT', cycleHz,
+  sample(t, input) { const s = poseSample(t, input); return { ...s, contactFeet: s.legs.map(leg => [-leg.foot[0], leg.foot[1], -leg.foot[2]]) }; },
+  lessons: [
+    { title: 'Four legs carry one rigid frame', short: 'Watch the planted diagonals',
+      text: 'Each leg is a three-link chain from hip pin to sole: a 480 mm femur, a 480 mm tibia and a 140 mm foot link. A closed two-link solution places the knee while the sole stays level. The four legs run in a lateral sequence with a 68 percent stance, so three feet normally share the ground while the fourth swings. The chassis sways 25 mm and bobs 18 mm without dragging a planted foot.',
+      fact: 'The leg links and foot offsets are exact; contact force, friction and balance are not solved.', view: 'detail', mode: 'solid', explode: 0 },
+    { title: 'Fourteen links, one continuous trunk', short: 'Follow the tip cap',
+      text: 'The trunk starts at a socket on the skull and carries fourteen rigid 85 mm links. Every next pin is built from the previous pin plus a normalized direction, so no link can stretch. The curl control changes the prescribed downward angle of every link, and a slow wave travels through the chain. The tip cap and its two grasp pads follow the final pin exactly.',
+      fact: 'The trunk is 1,190 mm pin-to-pin and can pass below the chest without touching a leg.', view: 'side', mode: 'solid', explode: 0.12 },
+    { title: 'A spine that is visible, not a solid hull', short: 'Count the vertebrae',
+      text: 'Eight thoracic vertebrae sit over a machined belly block, each with a transverse brass pin and two processes. Eight rib pairs per side close the barrel with open rails and small sternal pads. Three dorsal shell plates and two longitudinal titanium rails carry the shoulder and hip reactions while leaving the spinal pins readable in both Solid and X-ray.',
+      fact: 'Pale shell plates ghost in X-ray; the dark alloy, brass pins and titanium rails stay visible.', view: 'front', mode: 'xray', explode: 0.22 },
+    { title: 'Ears, tusks and a scanning head', short: 'Inspect the cranial frame',
+      text: 'The head turns on a transverse gimbal and carries two curved tusks, two open ear fans and a lower jaw. Each ear is an open lattice of five rails and three cross-braces, not an opaque slab, and turns around its own pivot with the ear-flare control. The tusks are rigid geometry anchored to the cranium and do not intersect the trunk envelope.',
+      fact: 'Ear flare is a prescribed inspection angle; no airflow, hearing or thermal exchange is computed.', view: 'top', mode: 'solid', explode: 0.3 },
+    { title: 'What moves, what is only shown', short: 'Know the limits',
+      text: 'The gait, knee solutions, trunk chain, tail chain, head gimbal and ear pivots come from one sampled pose. Hydraulic collars, copper service lines and the brass tail hub are structural illustrations. The model does not solve dynamics, soft tissue, mud, foot pressure, actuator load or stability on uneven ground, and it is not a validated mammoth reconstruction.',
+      fact: 'A complete gait cycle repeats exactly and can be paused, stepped or scrubbed without drift.', view: 'home', mode: 'cutaway', explode: 0.5 },
+  ],
+  async createModel() { return (await import('./model.js')).createModel(); },
+};

@@ -1,0 +1,36 @@
+import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
+
+export const descriptor = {
+  id: 'robot-cell', title: 'FABER R6', family: 'Six-Axis Robot Cell', collection: '028',
+  tagline: 'Six axes, a parallel gripper and a twelve-roller conveyor inside a safety cell.',
+  description: 'An industrial robot-cell anatomy study: a six-axis arm with an 850 mm upper link, a 780 mm forearm and a 220 mm wrist, a parallel gripper and a twelve-roller conveyor inside a mesh safety cell. Link lengths and the gripper gap are exact; servo dynamics, payload, collisions and cycle-time optimisation are not simulated.',
+  defaultInputs: DEFAULT_INPUTS,
+  controls: [
+    { key: 'cadence', label: 'Conveyor speed', min: 0.10, max: 0.60, step: 0.01, unit: 'Hz', precision: 2 },
+    { key: 'slew', label: 'Axis 1 slew', min: -70, max: 70, step: 1, unit: '°', precision: 0 },
+    { key: 'shoulder', label: 'Shoulder pitch', min: 10, max: 60, step: 1, unit: '°', precision: 0 },
+    { key: 'elbow', label: 'Elbow bend', min: 20, max: 100, step: 1, unit: '°', precision: 0 },
+    { key: 'grip', label: 'Jaw opening', min: 0, max: 1, step: 0.05, unit: '', precision: 2 },
+  ],
+  specs: [{ value: '06', label: 'AXES' }, { value: '12', label: 'ROLLERS' }],
+  cycleLabel: 'CELL CYCLE', cycleHz,
+  sample: poseSample,
+  lessons: [
+    { title: 'Six axes, two arm links, one wrist', short: 'Follow the tool centre point',
+      text: 'Axis 1 turns the turntable. The shoulder pitches an 850 mm upper arm, the elbow adds a 780 mm forearm and the wrist carries a 220 mm housing into the tool flange. Every joint angle is a bounded control, and the tool centre point is the sum of those exact links. The six teal labels identify the axes without hiding the bearings.',
+      fact: 'Upper, forearm, wrist and tool lengths are exact; servo dynamics and joint compliance are not solved.', view: 'detail', mode: 'solid', explode: 0 },
+    { title: 'The counterbalance is not a decoration', short: 'Inspect the gas spring',
+      text: 'A gas counterbalance runs from a clevis on the turntable to an anchor 400 mm along the upper arm. Its barrel and piston are drawn between sampled pin centres, so the strut shortens and lengthens as the shoulder pitches. The two joints stay visible and the spring never crosses the shoulder axis.',
+      fact: 'The counterbalance follows the sampled anchors; gas pressure, spring rate and payload torque are not solved.', view: 'side', mode: 'solid', explode: .14 },
+    { title: 'A parallel gripper with a measured gap', short: 'Open and close the jaws',
+      text: 'Two fingers slide on titanium guide rails. Their inner faces sit at 70 mm apart when closed and 200 mm apart when fully open, with the rubber pads always parallel. The gripper body, flange and wrist ring are separate selectable parts, so the tool can be inspected without hiding the arm.',
+      fact: 'Jaw travel is a bounded parallel motion; gripping force, compliance and workpiece slip are not simulated.', view: 'front', mode: 'cutaway', explode: .24 },
+    { title: 'The cell and the robot are separate structures', short: 'Look through the mesh',
+      text: 'The pedestal, conveyor, controller cabinet and eight fence posts are fixed to the cell floor. The turntable, arm, counterbalance and gripper rotate together above them. The safety mesh is an open grid, not an opaque wall, so the arm remains readable while the fence and floor markings define the working envelope.',
+      fact: 'The working envelope is drawn from the arm pose; reach limits, collisions and safety distances are not certified.', view: 'top', mode: 'xray', explode: .34 },
+    { title: 'What the cell model does not claim', short: 'Know the automation limits',
+      text: 'The controller screen, status beacon, scanner, conveyor motor, guards and workpiece are anatomical representations. The model does not solve servo tracking, belt slip, payload inertia, singularities, collision detection, safety-rated stopping, cycle time or programming. The conveyor moves parts; it does not schedule them.',
+      fact: 'All joints, the gripper gap and the conveyor cycle are deterministic and repeatable from any timestamp.', view: 'home', mode: 'solid', explode: .46 },
+  ],
+  async createModel() { return (await import('./model.js')).createModel(); },
+};

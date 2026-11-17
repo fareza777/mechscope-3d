@@ -17,6 +17,15 @@ import { descriptor as radialEngine } from './mechanisms/radial-engine/index.js'
 import { descriptor as planetary } from './mechanisms/planetary/index.js';
 import { descriptor as steamLocomotive } from './mechanisms/steam-locomotive/index.js';
 import { descriptor as tourbillon } from './mechanisms/tourbillon/index.js';
+import { descriptor as sentinel } from './mechanisms/sentinel/index.js';
+import { descriptor as mammut } from './mechanisms/mammut/index.js';
+import { descriptor as abyss } from './mechanisms/abyss/index.js';
+import { descriptor as cervus } from './mechanisms/cervus/index.js';
+import { descriptor as astrarium } from './mechanisms/astrarium/index.js';
+import { descriptor as excavator } from './mechanisms/excavator/index.js';
+import { descriptor as observatory } from './mechanisms/observatory/index.js';
+import { descriptor as piano } from './mechanisms/piano/index.js';
+import { descriptor as robotCell } from './mechanisms/robot-cell/index.js';
 
 export const MECHANISMS = Object.freeze([
   {
@@ -59,4 +68,13 @@ export const MECHANISMS = Object.freeze([
   planetary,
   steamLocomotive,
   tourbillon,
+  sentinel,
+  mammut,
+  abyss,
+  cervus,
+  astrarium,
+  excavator,
+  observatory,
+  piano,
+  robotCell,
 ]);

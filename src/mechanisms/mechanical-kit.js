@@ -115,7 +115,7 @@ export function createMechanicalKit(name) {
     node.position.copy(position); node.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), scale.normalize());
   }
   return {
-    group, parts, stats, part, add, rod, gear, fasteners, aim, sync,
+    group, assemblies, parts, stats, part, add, rod, gear, fasteners, aim, sync,
     get pickables() { return [...batches.values()].map(b => b.mesh); },
     dispose() { for (const { mesh } of batches.values()) mesh.dispose(); Object.values(geometries).forEach(g => g.dispose()); Object.values(materials).forEach(m => m.dispose()); },
   };

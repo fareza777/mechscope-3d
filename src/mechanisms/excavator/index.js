@@ -1,0 +1,36 @@
+import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
+
+export const descriptor = {
+  id: 'excavator', title: 'TERRA X7', family: 'Hydraulic Excavator', collection: '025',
+  tagline: 'A tracked upper structure, a four-bar bucket and three visible hydraulic rams.',
+  description: 'A tracked hydraulic excavator: fourteen shoes per side travel a fixed stadium path, the slewing house carries a 1,150 mm boom, a 920 mm stick and a four-bar bucket linkage. The rigid link lengths are exact and the three hydraulic cylinders follow sampled pin centres; oil flow, force, soil mechanics, track slip and stability are not simulated.',
+  defaultInputs: DEFAULT_INPUTS,
+  controls: [
+    { key: 'cadence', label: 'Track cadence', min: 0.08, max: 0.35, step: 0.01, unit: 'Hz', precision: 2 },
+    { key: 'slew', label: 'House slew', min: -35, max: 35, step: 1, unit: '°', precision: 0 },
+    { key: 'boom', label: 'Boom angle', min: 20, max: 55, step: 1, unit: '°', precision: 0 },
+    { key: 'stick', label: 'Stick fold', min: 40, max: 110, step: 1, unit: '°', precision: 0 },
+    { key: 'bucket', label: 'Bucket curl', min: 15, max: 75, step: 1, unit: '°', precision: 0 },
+  ],
+  specs: [{ value: '14', label: 'SHOES / SIDE' }, { value: '04', label: 'BAR LINKAGE' }],
+  cycleLabel: 'TRACK CYCLE', cycleHz,
+  sample: poseSample,
+  lessons: [
+    { title: 'The belt is a fixed stadium, not a stretchy loop', short: 'Follow a single shoe',
+      text: 'Each of the fourteen shoes per side rides the same stadium path: a bottom run, a front idler arc, a top run and a rear sprocket arc. The path length never changes, so every shoe keeps its pitch and returns to the same place after one cycle. The sprocket, idler and four road wheels are separate rotating parts.',
+      fact: 'Track pitch and the 1,560 mm centre distance are exact; belt tension and slip are not solved.', view: 'side', mode: 'solid', explode: 0 },
+    { title: 'Three rigid links position the bucket', short: 'Watch the stick and bucket',
+      text: 'The boom is 1,150 mm from the house pivot to the boom tip. The stick adds 920 mm to the bucket pivot. A 220 mm lever turns with the bucket, a 300 mm rocker turns on the stick and a constant 360 mm link connects them. The four-bar closes exactly at every control setting, so the bucket cannot drift or stretch.',
+      fact: 'Boom, stick, lever, rocker and link lengths are exact; the display is a kinematic, not a load-bearing, design.', view: 'detail', mode: 'solid', explode: .14 },
+    { title: 'Cylinders follow pins, not guessed geometry', short: 'Inspect the three rams',
+      text: 'The boom ram runs from the house bracket to a pin on the boom underside. The stick ram runs from the boom top to the stick bracket. The bucket ram runs from the stick to the four-bar rocker. Each barrel ends at a calculated midpoint and each piston reaches the sampled pin, so the visible stroke changes with the arm pose without a telescoping error.',
+      fact: 'Cylinder endpoints are sampled geometry; pressure, flow, buckling and hydraulic force are not represented.', view: 'front', mode: 'cutaway', explode: .24 },
+    { title: 'The house and undercarriage are separate structures', short: 'Slew the upper frame',
+      text: 'A 30-tooth brass ring gear sits on the turntable above the fixed centre casting. The cab, engine, counterweight, boom foot and all three rams turn as one upper structure. The track frames, blade, rollers and shoes stay with the undercarriage. Slew is limited to the inspection range so the arm cannot pass through the service walkway.',
+      fact: 'Slew is a rigid rotation of the upper structure; bearing clearance and chassis roll are not simulated.', view: 'top', mode: 'solid', explode: .32 },
+    { title: 'What the machine model does not claim', short: 'Know the working limits',
+      text: 'The engine hood, exhaust, tanks, cab glass, handrails, blade and hydraulic hoses are structural representations. The model does not solve soil cutting, bucket payload, tipping, track-ground pressure, engine output, hydraulic pressure, hose routing or operator visibility. The blade is a display tool, not a validated dozer attachment.',
+      fact: 'The full track cycle and all arm controls are deterministic and repeatable from any timestamp.', view: 'home', mode: 'xray', explode: .45 },
+  ],
+  async createModel() { return (await import('./model.js')).createModel(); },
+};

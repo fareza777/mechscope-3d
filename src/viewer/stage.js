@@ -167,7 +167,7 @@ export function createStage(container, spider, onPick, invalidate = () => {}) {
       if (x === 1) tween = null;
     }
     controls.update();
-    const feet = (state.legs || []).filter(leg => Array.isArray(leg.foot));
+    const feet = (state.legs || []).filter(leg => Array.isArray(leg.foot)).map((leg, i) => ({ ...leg, foot: state.contactFeet?.[i] || leg.foot }));
     while (contacts.length < feet.length) { const marker = new THREE.Mesh(contactGeometry, contactMaterial); contacts.push(marker); scene.add(marker); }
     for (let i = 0; i < contacts.length; i++) {
       if (feet[i]) contacts[i].position.set(feet[i].foot[0], -0.018, feet[i].foot[2]);
@@ -180,7 +180,6 @@ export function createStage(container, spider, onPick, invalidate = () => {}) {
       for (let i = 0; i <= h.length; i++) supportGeometry.attributes.position.setXYZ(i, h[i % h.length][0], -0.017, h[i % h.length][1]);
       supportGeometry.setDrawRange(0, h.length + 1); supportGeometry.attributes.position.needsUpdate = true;
     }
-    prepareMaterials();
     renderer.render(scene, camera);
   }
   const observer = new ResizeObserver(resize); observer.observe(container);
