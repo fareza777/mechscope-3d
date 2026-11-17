@@ -55,6 +55,23 @@ async function shot(name) {
   else await page.screenshot({ path: target, animations: 'disabled' });
 }
 async function canvasImage() { return android ? captureAndroid(page, true) : page.locator('#viewport canvas').screenshot(); }
+async function instancePose() {
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(resolve)))));
+  return page.evaluate(() => {
+    const { scene, camera } = window.__mechscope.stage;
+    const transforms = [], local = camera.matrixWorld.clone(), world = local.clone();
+    scene.updateMatrixWorld(true);
+    scene.traverse(object => {
+      if (!object.isInstancedMesh || !object.count) return;
+      const matrices = [];
+      for (let i = 0; i < object.count; i++) {
+        object.getMatrixAt(i, local); world.multiplyMatrices(object.matrixWorld, local); world.toArray(matrices, i * 16);
+      }
+      transforms.push({ parts: object.userData.instanceParts.slice(0, object.count), matrices });
+    });
+    return transforms;
+  });
+}
 try {
   await page.addInitScript(quality => { localStorage.setItem('mechscope.onboarded', '1'); localStorage.setItem('mechscope.preferences', JSON.stringify({ quality, theme: 'light', reduced: true })); }, quality);
   results.quality = quality;
@@ -62,11 +79,17 @@ try {
   else await page.goto(process.env.MECHSCOPE_URL || 'http://127.0.0.1:5174', { waitUntil: 'networkidle' });
   await page.waitForFunction(() => !!window.__mechscope, { timeout: 60000 });
   const catalog = await page.evaluate(() => window.__mechscope.catalog);
-  assert.equal(catalog.length, 9, 'All nine mechanisms are bundled offline');
+  assert.equal(catalog.length, 19, 'All nineteen mechanisms are bundled offline');
+  assert.equal(new Set(catalog.map(model => model.id)).size, 19, 'Collection entries are unique');
+  await page.locator('#collection-switch').click();
+  assert.equal(await page.locator('.collection-card').count(), 19, 'Every mechanism is reachable from the collection sheet');
+  await page.locator('#close-sheet').click();
   for (const { id, title } of catalog) {
     await page.locator('#collection-switch').click();
     await page.locator(`[data-mechanism="${id}"]`).click();
     await page.waitForFunction(id => window.__mechscope.state.mechanismId === id && !window.__mechscope.state.switching, id, { timeout: 60000 });
+    assert.equal((await page.locator('#machine-name').innerText()).trim(), title, 'Header names the active mechanism');
+    assert.match(await page.locator('#machine-family').innerText(), /\/ 019$/, 'Header count matches the expanded collection');
     assert.equal(await page.locator('#viewport canvas').count(), 1, 'Only one live graphics canvas');
     await page.evaluate(() => { window.__mechscope.setPlaying(true); window.__mechscope.stage.view('home', true); });
     await page.waitForTimeout(1200);
@@ -78,6 +101,16 @@ try {
     }));
     const second = await canvasImage();
     assert.notEqual(hash(first), hash(second), `${title}: rendered model pixels actually change`);
+    await page.evaluate(() => window.__mechscope.seek(.23));
+    await page.waitForTimeout(100);
+    const frozenTime = await page.evaluate(() => window.__mechscope.state.t);
+    const frozenPose = await instancePose();
+    await page.waitForTimeout(200);
+    assert.equal(await page.evaluate(() => window.__mechscope.state.t), frozenTime, `${id}: pause freezes time`);
+    assert.deepEqual(await instancePose(), frozenPose, `${id}: pause freezes actual instance transforms`);
+    await page.locator('#step').click();
+    await page.waitForTimeout(100);
+    assert.notDeepEqual(await instancePose(), frozenPose, `${id}: single-step moves actual geometry`);
     await page.evaluate(() => window.__mechscope.seek(.23));
     await page.waitForTimeout(100);
     const model = { id, title, timing, diagnostics: await page.evaluate(() => window.__mechscope.diagnostics) };
@@ -102,9 +135,17 @@ try {
     await page.locator('[data-mode="explode"]').click();
     await page.locator('#explode-range').evaluate(el => { el.value = '100'; el.dispatchEvent(new Event('input', { bubbles: true })); });
     await page.waitForFunction(() => window.__mechscope.state.explode === 1);
+    assert.notDeepEqual(await instancePose(), frozenPose, `${id}: explosion changes the rendered transforms without changing quality`);
     await shot(`collection-${id}-exploded`); await clearCanvas();
     await page.locator('#assemble').click();
     await page.waitForFunction(() => window.__mechscope.state.explode === 0);
+    const reassembled = await instancePose();
+    assert.equal(reassembled.length, frozenPose.length);
+    for (let i = 0; i < frozenPose.length; i++) {
+      assert.deepEqual(reassembled[i].parts, frozenPose[i].parts);
+      assert.equal(reassembled[i].matrices.length, frozenPose[i].matrices.length);
+      assert.ok(reassembled[i].matrices.every((value, j) => Math.abs(value - frozenPose[i].matrices[j]) < 1e-5), `${id}: all rendered instances return to the assembled pose`);
+    }
     await page.locator('[data-mode="simulate"]').click();
     const controls = page.locator('[data-input]');
     assert.ok(await controls.count() > 0);

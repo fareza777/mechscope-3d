@@ -31,7 +31,7 @@ app.innerHTML = `
     <div class="header-actions"><span class="offline">${icon('check')} OFFLINE READY</span><button class="icon-button" id="settings" aria-label="Settings">${icon('settings')}</button></div>
   </header>
   <main id="workspace">
-    <section class="machine-title"><div><span class="eyebrow" id="machine-family">MECHANICAL SPIDER · 001 / 009</span><h1 id="machine-name">ARACHNE SC–08</h1></div><div class="machine-actions"><button class="collection-switch" id="collection-switch" aria-label="Choose a mechanism">${icon('anatomy')}<span>Collection</span></button><button class="spec-button" id="machine-info" aria-label="Mechanism field notes">${icon('info')}</button></div></section>
+    <section class="machine-title"><div><span class="eyebrow" id="machine-family">MECHANICAL SPIDER · 001 / ${String(MECHANISMS.length).padStart(3, '0')}</span><h1 id="machine-name">ARACHNE SC–08</h1></div><div class="machine-actions"><button class="collection-switch" id="collection-switch" aria-label="Choose a mechanism">${icon('anatomy')}<span>Collection</span></button><button class="spec-button" id="machine-info" aria-label="Mechanism field notes">${icon('info')}</button></div></section>
     <section id="viewport" aria-label="Unobstructed 3D mechanical viewer">
       <div class="loading" id="loading"><img src="./brand/mechscope.svg" alt=""/><strong>Engineering, revealed.</strong><span>Preparing the mechanical studio</span><i></i></div>
     </section>

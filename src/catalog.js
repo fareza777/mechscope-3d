@@ -7,6 +7,16 @@ import { descriptor as dragonfly } from './mechanisms/dragonfly/index.js';
 import { descriptor as mantis } from './mechanisms/mantis/index.js';
 import { descriptor as octopus } from './mechanisms/octopus/index.js';
 import { descriptor as robotFish } from './mechanisms/robot-fish/index.js';
+import { descriptor as crab } from './mechanisms/crab/index.js';
+import { descriptor as centipede } from './mechanisms/centipede/index.js';
+import { descriptor as cobra } from './mechanisms/cobra/index.js';
+import { descriptor as tortoise } from './mechanisms/tortoise/index.js';
+import { descriptor as hummingbird } from './mechanisms/hummingbird/index.js';
+import { descriptor as robotHand } from './mechanisms/robot-hand/index.js';
+import { descriptor as radialEngine } from './mechanisms/radial-engine/index.js';
+import { descriptor as planetary } from './mechanisms/planetary/index.js';
+import { descriptor as steamLocomotive } from './mechanisms/steam-locomotive/index.js';
+import { descriptor as tourbillon } from './mechanisms/tourbillon/index.js';
 
 export const MECHANISMS = Object.freeze([
   {
@@ -39,4 +49,14 @@ export const MECHANISMS = Object.freeze([
   mantis,
   octopus,
   robotFish,
+  crab,
+  centipede,
+  cobra,
+  tortoise,
+  hummingbird,
+  robotHand,
+  radialEngine,
+  planetary,
+  steamLocomotive,
+  tourbillon,
 ]);
