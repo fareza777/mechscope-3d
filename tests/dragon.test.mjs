@@ -17,7 +17,7 @@ function numbers(value) {
 const point = (m, id, local) => new THREE.Vector3(...local).applyMatrix4(m.group.getObjectByName(`dragon.${id}`).matrixWorld).toArray();
 
 test('dragon descriptor is complete and catalogue imports stay free of rendering code', async () => {
-  assert.equal(descriptor.id, 'dragon'); assert.equal(descriptor.collection, '020'); assert.equal(descriptor.lessons.length, 5);
+  assert.equal(descriptor.id, 'dragon'); assert.equal(descriptor.collection, '029'); assert.equal(descriptor.lessons.length, 5);
   for (const file of ['index.js', 'kin.js']) assert.ok(!/from\s+['"]three|model/.test(readFileSync(new URL(`../src/mechanisms/dragon/${file}`, import.meta.url), 'utf8').split('\n').filter(l => l.startsWith('import')).join('\n')));
   assert.deepEqual(descriptor.sample(0), sample(0));
   const m = await descriptor.createModel(); assert.ok(m.framePoints.length > 100); m.dispose();

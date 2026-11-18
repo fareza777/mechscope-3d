@@ -1,7 +1,7 @@
 import { DEFAULT_INPUTS, cycleHz, sample } from './kin.js';
 
 export const descriptor = {
-  id: 'dragon', title: 'DRACONIS D6', family: 'Winged Mechanical Dragon', collection: '020',
+  id: 'dragon', title: 'DRACONIS D6', family: 'Winged Mechanical Dragon', collection: '029',
   tagline: 'Six limbs, thirty-four vertebrae and one continuous choreography.',
   description: 'An original conceptual dragon automaton with four digitigrade legs, two folding battened membrane wings, a ten-link neck, an eighteen-link tail, a hinged jaw, spreading frills, erectile crest blades, breathing ribs and a nested furnace gyroscope. A single master phase blends rise, wing display, descent, prowling walk, coil and strike. It is an educational kinematic choreography, not a simulation of flight, balance, contact forces or animal anatomy.',
   defaultInputs: DEFAULT_INPUTS,

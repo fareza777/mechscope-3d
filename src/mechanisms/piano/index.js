@@ -1,0 +1,35 @@
+import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
+
+export const descriptor = {
+  id: 'piano', title: 'HARMONIA P8', family: 'Concert Grand Automaton', collection: '027',
+  tagline: 'A playing keyboard, twenty-four hammer actions, dampers and a lifting concert lid.',
+  description: 'A player-grand anatomy study: fourteen white keys and ten black keys drive twenty-four hammer actions, dampers and three-wire string courses under a lifting concert lid. The play phrase, key rotation, hammer lift, damper lift and lid hinge are deterministic; string acoustics, action regulation, voicing and sound output are not simulated.',
+  defaultInputs: DEFAULT_INPUTS,
+  controls: [
+    { key: 'cadence', label: 'Phrase tempo', min: 0.45, max: 2.0, step: 0.05, unit: 'Hz', precision: 2 },
+    { key: 'lid', label: 'Lid angle', min: 0, max: 55, step: 1, unit: '°', precision: 0 },
+    { key: 'pedal', label: 'Sustain pedal', min: 0, max: 1, step: 0.05, unit: '', precision: 2 },
+    { key: 'velocity', label: 'Key velocity', min: 0.3, max: 1, step: 0.05, unit: '', precision: 2 },
+  ],
+  specs: [{ value: '24', label: 'KEY ACTIONS' }, { value: '72', label: 'STRINGS' }],
+  cycleLabel: 'PHRASE CYCLE', cycleHz,
+  sample: poseSample,
+  lessons: [
+    { title: 'The key is the first rigid lever', short: 'Watch the key dip',
+      text: 'Every key turns on a balance bushing at the rear key frame. The front falls by up to 61 mm while the back rises under the action. Fourteen white keys and ten black keys share the same lever geometry, so the black keys do not float above a different action. The phrase presses them in a fixed sequence.',
+      fact: 'Key travel and the note layout are exact; touch weight, friction and repetition are not solved.', view: 'detail', mode: 'solid', explode: 0 },
+    { title: 'Hammer and damper are separate outputs', short: 'Inspect the action rail',
+      text: 'Each hammer shank turns about a brass butt on the hammer rail and lifts a pale felt head toward its string. Each damper sits over its own course and lifts when its key is played. The sustain pedal lifts every damper together, while the key lift stays local to one note. No jack, repetition lever or escapement is modelled.',
+      fact: 'Hammer and damper motions are deterministic; the model does not reproduce let-off, aftertouch or hammer voicing.', view: 'side', mode: 'solid', explode: .14 },
+    { title: 'Three wires per course, one plate', short: 'Follow the string fan',
+      text: 'Each of the twenty-four courses carries three parallel wires from a front tuning pin over the bridge to a rear hitch pin. The bass courses reach further toward the tail, which is why the string fan widens behind the keyboard. A dark cast-iron plate and five brass struts carry the courses above the pale soundboard.',
+      fact: 'Course count, wire spacing and the visible fan are exact geometry; tension, inharmonicity and tuning are not simulated.', view: 'top', mode: 'xray', explode: .24 },
+    { title: 'The lid is one rigid panel on one hinge', short: 'Open the lid',
+      text: 'The concert lid turns on a continuous brass hinge along the left side of the bent rim. Four cross ribs and an inner dark seal move with it. The prop stick is solved from a fixed case point to the lid underside at every opening angle, so the stick never floats away from the lid or passes through the rim.',
+      fact: 'Lid opening is a single hinge rotation; the prop is a sampled two-point strut, not a locking mechanism.', view: 'front', mode: 'solid', explode: .34 },
+    { title: 'What this automaton does not claim', short: 'Know the musical limits',
+      text: 'The phrase is a repeating teaching pattern, not a composition or a recorded performance. The pale rim, plate, soundboard, bridge, hammers, dampers and pedals are anatomical representations. The model does not solve string vibration, sound radiation, pedal noise, action regulation, tuning stability or structural load.',
+      fact: 'The full phrase repeats exactly and can be paused, stepped and scrubbed; audio is intentionally absent.', view: 'home', mode: 'cutaway', explode: .46 },
+  ],
+  async createModel() { return (await import('./model.js')).createModel(); },
+};

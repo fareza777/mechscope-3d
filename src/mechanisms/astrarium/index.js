@@ -1,0 +1,35 @@
+import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
+
+export const descriptor = {
+  id: 'astrarium', title: 'ASTRARIUM OR-9', family: 'Clockwork Orrery', collection: '024',
+  tagline: 'Eight planets, six moons and a tilting armillary on one exact gear stack.',
+  description: 'A clockwork orrery: eight planet arms on a coaxial brass gear stack, six moons on fixed orbit wires, a tilted ecliptic assembly and a three-ring armillary. Orbit radii, arm heights and moon distances are exact; orbital periods are deliberately compressed for inspection and no ephemeris, gravity or resonance model is claimed.',
+  defaultInputs: DEFAULT_INPUTS,
+  controls: [
+    { key: 'cadence', label: 'Orbit cadence', min: 0.02, max: 0.10, step: 0.01, unit: 'Hz', precision: 2 },
+    { key: 'tilt', label: 'Stack tilt', min: 0, max: 28, step: 1, unit: '°', precision: 0 },
+    { key: 'moon', label: 'Moon lag', min: 0, max: 45, step: 1, unit: '°', precision: 0 },
+    { key: 'armillary', label: 'Ecliptic tilt', min: 0, max: 60, step: 1, unit: '°', precision: 0 },
+  ],
+  specs: [{ value: '08', label: 'PLANETS' }, { value: '06', label: 'MOONS' }],
+  cycleLabel: 'ORBIT CYCLE', cycleHz,
+  sample: poseSample,
+  lessons: [
+    { title: 'One spindle, eight exact radii', short: 'Follow each arm to its planet',
+      text: 'Every planet rides a rigid arm on its own coaxial sleeve. Mercury sits at 300 mm, Neptune at 1,060 mm, and the eight arm heights step from −440 to +470 mm around the gimbal pivot. The arm length is the orbit radius, so the planet cannot drift inward or outward as the spindle turns.',
+      fact: 'The eight orbit radii and stack heights are exact; the periods are compressed for visibility, not astronomical.', view: 'top', mode: 'solid', explode: 0 },
+    { title: 'The stack tilts as one assembly', short: 'Watch the gimbal ring',
+      text: 'The trunnion gimbal carries the entire eight-arm stack, not just a decorative outer ring. Tilting the assembly moves every planet and moon through the same rotation, while the graduated dial, pedestal and drive motor stay fixed. The lock arc shows the inspection range rather than a claimed observing latitude.',
+      fact: 'Tilt is a rigid rotation about the transverse trunnion; no precession or polar-alignment solution is simulated.', view: 'side', mode: 'solid', explode: .16 },
+    { title: 'Moons ride the planet, not the spindle', short: 'Trace the fine orbit wires',
+      text: 'Six moonlets turn on the planet cradles themselves: Luna at 85 mm, Phobos at 45 mm, Deimos at 64 mm, Io at 115 mm, Titan at 100 mm and Titania at 78 mm. Each wire is a fixed radius and each moon angle includes the adjustable lag control, so the moon pattern can be read without changing the planet orbits.',
+      fact: 'Moon radii are exact; the lag control phases the whole set for inspection and does not model tidal locking.', view: 'detail', mode: 'solid', explode: .24 },
+    { title: 'A graduated frame around the orbits', short: 'Read the fixed dial',
+      text: 'The fixed plinth carries three concentric brass arcs, thirty-six radial ticks and twelve zodiac stations. The inner ring is the azimuth reference, the middle ring separates the planet sweep, and the outer ring carries the engraved stations. The pale tablets are raised above the brass so they remain readable in both Solid and X-ray.',
+      fact: 'Zodiac labels are inspection marks, not a claim that the compressed orbits match real sky positions.', view: 'front', mode: 'xray', explode: .32 },
+    { title: 'What turns, what is only represented', short: 'Know the instrument limits',
+      text: 'The coaxial sleeves, arm radii, cradle axles, moon wires, gimbal, handwheel, index gears and armillary rings all follow the sampled pose. Materials, engraving, the glowing sun and the compressed periods are presentation choices. The model does not solve gravity, orbital perturbations, gear tooth contact, bearing friction or an astronomical ephemeris.',
+      fact: 'A complete orbit cycle repeats exactly and can be paused, stepped and scrubbed without accumulating drift.', view: 'home', mode: 'cutaway', explode: .45 },
+  ],
+  async createModel() { return (await import('./model.js')).createModel(); },
+};

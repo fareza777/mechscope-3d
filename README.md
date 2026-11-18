@@ -1,6 +1,6 @@
 # MechScope 3D: How It Works
 
-An offline mechanical anatomy studio by **F7 Developer**, with twenty interactive mechanisms built from procedural geometry and deterministic kinematics. The flagship is **ARACHNE SC–08**, an original eight-legged robotic spider.
+An offline mechanical anatomy studio by **F7 Developer**, with twenty-nine interactive mechanisms built from procedural geometry and deterministic kinematics. The flagship is **ARACHNE SC–08**, an original eight-legged robotic spider.
 
 | Mechanism | Focus |
 |---|---|
@@ -23,6 +23,15 @@ An offline mechanical anatomy studio by **F7 Developer**, with twenty interactiv
 | ORBIT P3 | Three-planet epicyclic transmission and visible carrier drive |
 | TITAN S6 | Six-wheel steam locomotive, quartered cranks and coupling rods |
 | CHRONOS T3 | Open tourbillon movement, rotating cage and oscillating balance |
+| SENTINEL H9 | Bipedal exoskeleton, inverse-kinematic legs, ten articulated digits |
+| MAMMUT M4 | Four-legged mammoth, fourteen-link trunk and sixteen open ribs |
+| ABYSS S9 | Suspended shark, eighteen axial links and five gill stations per side |
+| CERVUS B6 | Stag beetle, six IK legs, 820 mm pincers and lifting elytra |
+| ASTRARIUM OR-9 | Eight-planet orrery, six moons and a tilting armillary |
+| TERRA X7 | Tracked excavator, four-bar bucket and three hydraulic rams |
+| SPECULA O6 | Rotating dome, two-leaf slit and seven-segment telescope |
+| HARMONIA P8 | Player grand, 24 actions, dampers and a lifting lid |
+| FABER R6 | Six-axis robot arm, parallel gripper and conveyor cell |
 | DRACONIS D6 | Winged dragon: four digitigrade IK legs, folding membrane wings, 34 vertebrae and a six-act choreography |
 
 ## Release status
@@ -33,7 +42,7 @@ The production Gradle variant refuses to build without real advertising configur
 
 ## The experience
 
-- **Explore:** Twenty PBR procedural mechanisms, environment reflections, studio lighting, shadows, 360° orbit, pinch zoom, camera presets and immersive view. Playback and camera controls stay outside the canvas; compact statistics preserve viewer space.
+- **Explore:** Twenty-nine PBR procedural mechanisms, environment reflections, studio lighting, shadows, 360° orbit, pinch zoom, camera presets and immersive view. Playback and camera controls stay outside the canvas; compact statistics preserve viewer space.
 - **Anatomy:** Select model components or search the component index; inspect purpose, mechanism, material and live readouts. Solid, X-ray and section modes.
 - **How it works:** Five measured, model-specific lessons per mechanism, linked to camera, material and explosion states.
 - **Exploded:** Continuously separate and reassemble subassemblies without switching to a video or another model.
@@ -64,7 +73,7 @@ Application source is MIT. Supplied F7 Developer brand assets and trademarks are
 src/catalog.js          mechanism descriptors and lazy geometry loading
 src/spider/kin.js        pure math, design dimensions, trajectories and lessons
 src/spider/model.js      procedural geometry, component metadata, posed assemblies
-src/mechanisms/          nineteen additional descriptors, samplers and geometry models
+src/mechanisms/          twenty-eight additional descriptors, samplers and geometry models
 src/viewer/stage.js      Three.js lighting, environment, camera, picking and quality
 src/main.js             mobile interface, state, settings and native bridge
 src/style.css           responsive light/dark interface
@@ -144,6 +153,6 @@ The same runner can attach to a **debug** MechScope Android WebView using an exp
 
 The target US base price for the permanent `remove_ads` product is **$4.99**, configured in Play Console. Checkout uses the localized price provided by Google Play; the UI does not fabricate a price or entitlement when configuration is missing. Restored purchases require a valid signature and correct package/product/state. Pending purchases are not granted. Signed acknowledged receipts support offline access but cannot detect refunds or account changes until reconnection.
 
-Consent is required before ads can be requested. Banners occupy a native container outside the viewer and above system-navigation insets. Interstitials are limited to a collection transition, never shown on first launch, and rate-limited to at least three minutes. Rewarded ads are explicitly requested and grant a 15-minute ad break in the current app session only from the SDK's earned-reward callback. They never change rendering quality or unlock settings. All twenty offline mechanisms remain available without watching an ad.
+Consent is required before ads can be requested. Banners occupy a native container outside the viewer and above system-navigation insets. Interstitials are limited to a collection transition, never shown on first launch, and rate-limited to at least three minutes. Rewarded ads are explicitly requested and grant a 15-minute ad break in the current app session only from the SDK's earned-reward callback. They never change rendering quality or unlock settings. All twenty-nine offline mechanisms remain available without watching an ad.
 
 For production hardening, add a secure Play Developer API purchase-verification backend and real-time developer notifications, complete policy review and test actual purchase/cancellation/refund/restore flows on a Play test track.

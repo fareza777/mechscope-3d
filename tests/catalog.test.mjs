@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MECHANISMS } from '../src/catalog.js';
 
-const expected = ['arachne-sc08', 'crossplane-v8', 'strandbeest', 'cessna-gear', 'scorpion', 'dragonfly', 'mantis', 'octopus', 'robot-fish', 'crab', 'centipede', 'cobra', 'tortoise', 'hummingbird', 'robot-hand', 'radial-engine', 'planetary', 'steam-locomotive', 'tourbillon', 'dragon'];
+const expected = ['arachne-sc08', 'crossplane-v8', 'strandbeest', 'cessna-gear', 'scorpion', 'dragonfly', 'mantis', 'octopus', 'robot-fish', 'crab', 'centipede', 'cobra', 'tortoise', 'hummingbird', 'robot-hand', 'radial-engine', 'planetary', 'steam-locomotive', 'tourbillon', 'sentinel', 'mammut', 'abyss', 'cervus', 'astrarium', 'excavator', 'observatory', 'piano', 'robot-cell', 'dragon'];
 const matrices = model => {
   model.group.updateMatrixWorld(true);
   return model.pickables.filter(mesh => mesh.count).map(mesh => {
@@ -19,9 +19,9 @@ const finite = value => {
   else if (value && typeof value === 'object') Object.values(value).forEach(finite);
 };
 
-test('twenty independently addressable offline mechanisms retain the original nine in order', () => {
+test('twenty-nine independently addressable offline mechanisms retain the original nine in order', () => {
   assert.deepEqual(MECHANISMS.map(model => model.id), expected);
-  assert.equal(new Set(MECHANISMS.map(model => model.title)).size, 20);
+  assert.equal(new Set(MECHANISMS.map(model => model.title)).size, 29);
   for (const [i, descriptor] of MECHANISMS.entries()) {
     assert.equal(descriptor.collection, String(i + 1).padStart(3, '0'));
     assert.equal(descriptor.specs.length, 2);

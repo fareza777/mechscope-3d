@@ -1,0 +1,36 @@
+import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
+
+export const descriptor = {
+  id: 'cervus', title: 'CERVUS B6', family: 'Stag Beetle Mechanism', collection: '023',
+  tagline: 'Six inverse-kinematic legs, two three-link pincers and lifting elytra.',
+  description: 'A stag-beetle-shaped mechanism: six three-link legs in an alternating tripod gait, a segmented abdomen, two five-segment antennae, two lifting elytra with folded hind-wing frames and a pair of 820 mm pincers driven from the head. Link lengths are exact and the gait is deterministic; shell flex, grip force, flight and real insect behavior are not simulated.',
+  defaultInputs: DEFAULT_INPUTS,
+  controls: [
+    { key: 'cadence', label: 'Scuttle cadence', min: 0.15, max: 0.9, step: 0.01, unit: 'Hz', precision: 2 },
+    { key: 'stride', label: 'Foot travel', min: 0.06, max: 0.16, step: 0.01, unit: 'm', precision: 2 },
+    { key: 'gape', label: 'Pincer gape', min: 0, max: 32, step: 1, unit: '°', precision: 0 },
+    { key: 'elytra', label: 'Elytra lift', min: 0, max: 28, step: 1, unit: '°', precision: 0 },
+    { key: 'antenna', label: 'Antenna sweep', min: 0, max: 25, step: 1, unit: '°', precision: 0 },
+  ],
+  specs: [{ value: '820', label: 'PINCER · MM' }, { value: '06', label: 'IK LEGS' }],
+  cycleLabel: 'BEETLE GAIT', cycleHz,
+  sample(t, input) { const s = poseSample(t, input); return { ...s, contactFeet: s.legs.map(leg => [-leg.foot[0], leg.foot[1], -leg.foot[2]]) }; },
+  lessons: [
+    { title: 'Six legs in two alternating tripods', short: 'Follow the planted tripod',
+      text: 'Each leg is a closed chain of a 380 mm femur, a 400 mm tibia and a 100 mm tarsus. Three legs share one phase and three share the opposite phase, so the beetle always has a support tripod on the ground. A 62 percent stance gives each foot a short planted travel before it lifts. The chassis bobs 12 mm and sways 12 mm without moving a planted sole.',
+      fact: 'The link lengths and tripod phases are exact; contact force, friction and climbing are not solved.', view: 'detail', mode: 'solid', explode: 0 },
+    { title: 'Two pincers on real hinges', short: 'Open the mandibles',
+      text: 'Each pincer is a three-link chain of 300, 280 and 240 mm beams rooted in a bolted head socket. The gape control opens both roots and carries the curved inner teeth outward as one rigid chain per side. Every link stays at its design length. The model does not bend the pincer, crush anything, calculate grip force or claim that the teeth are sharp enough for real use.',
+      fact: 'The pincer is 820 mm long from root to tip and opens through a 32-degree gape range.', view: 'front', mode: 'cutaway', explode: 0.2 },
+    { title: 'Elytra that actually lift', short: 'Inspect the folded wing',
+      text: 'Both elytral covers turn on a common brass hinge bar above the waist. At zero lift they meet over the six-link abdomen; at full lift they expose the dark tergites and the folded hind-wing membrane frames beneath. The four longitudinal rails and pale plate of each cover remain selectable. The membranes are structural frames, not aerodynamic surfaces, and no flight, airflow or wingbeat is simulated.',
+      fact: 'The elytra are covers, not powered wings; the model shows stored geometry, not flight.', view: 'top', mode: 'xray', explode: 0.32 },
+    { title: 'An abdomen of six pinned segments', short: 'Count the tergites',
+      text: 'Six abdominal frames carry the gut, the visible membrane and one pale tergite each. Every segment is a separate part with two tapered rings, a 130 mm pin spacing and a lateral service line. A small lateral wave travels through the chain as the model scuttles, but the abdomen does not stretch or compress. The final brass hub carries two short cerci and closes the body.',
+      fact: 'Six frames, six tergites and one tip make the abdomen; each pin remains individually inspectable.', view: 'side', mode: 'solid', explode: 0.42 },
+    { title: 'What this beetle is not', short: 'Know the limits',
+      text: 'The six legs, two pincers, ten antennal segments, two elytra and six abdominal frames come from one sampled pose. Antennae sweep as rigid linked chains, the elytra lift on a common hinge, and the feet follow a repeatable tripod path. The model does not solve muscle, shell flex, adhesion, wing aerodynamics, grip, terrain or real stag-beetle behavior, and its proportions are an artistic mechanism rather than a validated species reconstruction.',
+      fact: 'The cycle repeats exactly and every hinge is deterministic; biological and aerodynamic claims are out of scope.', view: 'home', mode: 'solid', explode: 0.5 },
+  ],
+  async createModel() { return (await import('./model.js')).createModel(); },
+};

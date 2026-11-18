@@ -1,18 +1,20 @@
 # Verification and device evidence
 
-## DRACONIS D6 addition: 17 November 2026
+## DRACONIS D6 addition: 18 November 2026
 
-The twentieth mechanism (winged dragon) was verified in a Linux container: `npm test` (223 pass, 1 skipped WebGL gate), `npm run build`, and `pose-qa.mjs` restricted to `dragon` in headless Chromium with SwiftShader (24 rendered poses fit the home camera). `collection-qa.mjs` and native Android runs were **not** repeated for this addition. The stage now accepts optional `framePoints` from a model so the home camera fits whole-cycle geometry of shape-changing mechanisms; models without it keep the previous box fit.
+DRACONIS D6 (collection 029, winged dragon) was verified in a Linux container: `npm test`, `npm run build`, and `pose-qa.mjs` restricted to `dragon` in headless Chromium with SwiftShader (24 rendered poses fit the home camera). `collection-qa.mjs` and native Android runs were **not** repeated for this addition. The stage accepts optional `framePoints` from a model so the home camera fits whole-cycle geometry of shape-changing mechanisms; models without it keep the previous box fit.
 
-## Current nineteen-mechanism verification: 17 November 2026
+## Nineteen-mechanism verification: 17 November 2026
 
-The collection was expanded from nine to nineteen mechanisms. The following local results were recorded against the final source and production bundle:
+The collection was expanded from nine to nineteen mechanisms. The following local results were recorded against the final source and production bundle. SENTINEL H9 (collection 020) was added after that pass, followed by MAMMUT M4, ABYSS S9 and CERVUS B6 (collections 021–023), then ASTRARIUM OR-9, TERRA X7, SPECULA O6, HARMONIA P8 and FABER R6 (collections 024–028). Their deterministic kinematics and geometry are covered by the unit suite and shared catalog gates, but the browser collection, pose-budget and native checks below have not yet been rerun for the twenty-eight-mechanism build.
 
 - Unit and integration suite: **218 tests, 217 passed, zero failed, one optional WebGL test skipped**.
 - All nineteen mechanisms passed the desktop Chrome collection suite: measured changing pixels, real instance-transform pause/step behaviour, anatomy metadata and search, solid/X-ray/section, exact exploded and reassembled transforms, every simulation input at both limits, all five lessons, one live canvas per model, no controls over the canvas, labels of at least 12 CSS pixels, full-pixel-density rendering and responsive 360×640, 393×852, 852×393 and 1280×900 layouts.
 - The ten new mechanisms additionally passed a 24-pose framing sweep each (240 rendered poses across minimum/default/maximum control settings): every submitted vertex stayed inside the home camera and in front of it. A deliberately collapsed-camera negative control was rejected.
 - Compact statistics remain a 40-pixel strip at 393 pixels wide, and every statistics label fits in its cell.
 - The final production web bundle was built and synced into the Android assets. The debug APK was rebuilt successfully.
+
+- Current source suite after the five object additions: **252 tests, 251 passed, zero failed, one optional WebGL test skipped**. The production web bundle also builds successfully.
 
 **Not yet re-verified on the phone:** the Redmi Note 11 used for earlier native testing was disconnected before the nineteen-model APK could be installed. The native results below are the historical nine-mechanism evidence and do not certify the ten new models, the new APK or its frame times. Re-run the native collection command after reconnecting the explicitly selected device.
 
@@ -32,6 +34,15 @@ Measured from submitted instance buffers in the model tests; low tiers keep ever
 | ORBIT P3 | 104 | 2,155 | 86,508 | 56,652 | 18 |
 | TITAN S6 | 125 | 1,823 | 87,420 | 56,148 | 19 |
 | CHRONOS T3 | 145 | 2,080 | 87,024 | 69,564 | 15 |
+| SENTINEL H9 | 137 | 1,078 | 55,344 | 31,908 | 29 |
+| MAMMUT M4 | 149 | 771 | 50,316 | 34,536 | 22 |
+| ABYSS S9 | 111 | 894 | 48,528 | 26,676 | 21 |
+| CERVUS B6 | 96 | 565 | 45,564 | 35,712 | 18 |
+| ASTRARIUM OR-9 | 102 | 1,322 | 65,448 | 58,332 | 20 |
+| TERRA X7 | 84 | 577 | 30,312 | 22,032 | 21 |
+| SPECULA O6 | 132 | 1,141 | 58,224 | 39,000 | 22 |
+| HARMONIA P8 | 118 | 712 | 41,724 | 25,908 | 16 |
+| FABER R6 | 81 | 611 | 32,832 | 24,156 | 25 |
 
 ### Historical native result: nine-mechanism APK
 
@@ -80,7 +91,7 @@ node scripts/collection-qa.mjs
 node scripts/pose-qa.mjs
 ```
 
-`collection-qa.mjs` covers all nineteen mechanisms and responsive layouts. `pose-qa.mjs` sweeps 24 rendered poses per new mechanism (minimum, default and maximum inputs), projects every submitted vertex through the home camera and rejects clipping with an independently collapsed-camera negative control.
+`collection-qa.mjs` covers every mechanism in the catalog plus responsive layouts. `pose-qa.mjs` sweeps 24 rendered poses per new mechanism (minimum, default and maximum inputs), projects every submitted vertex through the home camera and rejects clipping with an independently collapsed-camera negative control.
 
 The separate `node scripts/browser-qa.mjs` golden-path runner targets the development server on port 5173 by default. Set `MECHSCOPE_URL` to use another local server. Do not rebuild the served bundle while a test is running.
 

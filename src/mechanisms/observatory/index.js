@@ -1,0 +1,35 @@
+import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
+
+export const descriptor = {
+  id: 'observatory', title: 'SPECULA O6', family: 'Equatorial Observatory', collection: '026',
+  tagline: 'A rotating dome, a two-leaf slit and a seven-segment equatorial telescope.',
+  description: 'An observatory anatomy study: a twelve-rib dome runs on twelve visible rollers, two slit shutters open on vertical hinges, and a fork-mounted telescope carries a seven-segment primary, a secondary spider and a focuser. The dome track, shutter leaves, fork and tube are rigid; optics, seeing, tracking accuracy and dome-seeing are not simulated.',
+  defaultInputs: DEFAULT_INPUTS,
+  controls: [
+    { key: 'cadence', label: 'Drive cadence', min: 0.03, max: 0.12, step: 0.01, unit: 'Hz', precision: 2 },
+    { key: 'dome', label: 'Dome azimuth', min: -150, max: 150, step: 5, unit: '°', precision: 0 },
+    { key: 'altitude', label: 'Tube altitude', min: 12, max: 82, step: 1, unit: '°', precision: 0 },
+    { key: 'shutter', label: 'Slit opening', min: 0, max: 70, step: 1, unit: '°', precision: 0 },
+  ],
+  specs: [{ value: '07', label: 'MIRROR SEGMENTS' }, { value: '1640', label: 'TUBE · MM' }],
+  cycleLabel: 'TRACKING CYCLE', cycleHz,
+  sample: poseSample,
+  lessons: [
+    { title: 'The dome is a frame, not a solid cap', short: 'Count the meridian ribs',
+      text: 'Twelve meridian ribs rise from the brass track ring to the apex cap. Three latitude rings brace them, and thirty-three skin panels close the bays except at the observing slit. The pale panels are separate selectable parts, so X-ray and section modes can ghost the shell while the telescope and fork stay readable.',
+      fact: 'The 1,260 mm dome radius, three latitude rings and twelve ribs are exact structure, not a scan.', view: 'side', mode: 'xray', explode: .14 },
+    { title: 'Two shutters open on vertical hinges', short: 'Follow the slit leaves',
+      text: 'Each shutter is a rigid leaf on a brass hinge barrel at one edge of the slit. The left leaf turns one way and the right leaf the other, opening up to 72 degrees. The slit gap is a real opening in the shell, not a painted dark stripe, and the fixed drive pinion stays with the wall while the dome gear turns with the dome.',
+      fact: 'Shutter opening is a rigid hinge rotation; weather sealing and wind load are not simulated.', view: 'front', mode: 'solid', explode: .22 },
+    { title: 'One declination axis, one tube', short: 'Swing the tube',
+      text: 'The fork base carries two arms and a continuous declination shaft. The tube rotates about that single transverse axis through 12 to 82 degrees of altitude. Three longerons, eight brass rings, a seven-segment primary cell, a three-vane secondary spider and a focuser all turn together, so the optical bench cannot drift inside the tube.',
+      fact: 'The 1,640 mm tube length, fork span and mirror ring radius are exact; no optical ray trace is performed.', view: 'detail', mode: 'solid', explode: .30 },
+    { title: 'The mount and the building are separate', short: 'Look under the floor',
+      text: 'The concrete pier passes through the timber floor and carries the wedge, fork and tube independently. Eight wall piers, a foundation ring, the floor plates and the entry stair belong to the building. Rotating the dome or opening the shutters cannot move the telescope, and slewing the tube cannot move the wall.',
+      fact: 'Pier isolation is shown as separate structure; vibration transfer and foundation stiffness are not solved.', view: 'top', mode: 'cutaway', explode: .38 },
+    { title: 'What the observatory does not claim', short: 'Know the model limits',
+      text: 'The mirror tiles, secondary baffle, focuser knobs, finder, counterweights, hand controller, desk, screens and dehumidifier are anatomical representations. The model does not compute seeing, diffraction, mirror figure, polar alignment, sidereal tracking error, dome currents or structural deflection. Screen content and the glowing glass are illustrative.',
+      fact: 'Dome azimuth, shutter opening, tube altitude and the drive cycle are deterministic and repeatable.', view: 'home', mode: 'solid', explode: .46 },
+  ],
+  async createModel() { return (await import('./model.js')).createModel(); },
+};
