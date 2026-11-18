@@ -1304,7 +1304,7 @@ export function createModel() {
 
   return {
     group: kit.group, update, framePoints, parts: kit.parts, stats: kit.stats,
-    views: { home: [3.6, 2.5, 4.6], side: [5.2, 1.4, .6], front: [0, 1.35, 5.2], detail: [-3.6, 2.2, 4.0], exploded: [3.7, 2.9, 4.8] },
+    views: { home: [3.8, 2.5, -4.3], side: [5.2, 1.6, -.4], front: [0, 1.6, -5.4], detail: [-3.6, 2.2, -4.0], exploded: [4.0, 2.9, -4.6] },
     get pickables() { return disposed ? [] : kit.pickables; },
     dispose() { if (disposed) return; disposed = true; kit.dispose(); kit.group.clear(); },
   };

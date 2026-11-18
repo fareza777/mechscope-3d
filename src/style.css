@@ -17,6 +17,12 @@
 .machine-actions{display:flex;align-items:center;gap:10px}
 .collection-switch{display:flex;align-items:center;gap:7px;font-size:12px;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:8px}
 .collection-switch .icon{width:17px;height:17px}
+.mechanism-pager{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-shrink:0}
+.pager-button{width:38px;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:0;flex-shrink:0}
+.pager-button:hover{background:var(--card)}
+.pager-button .icon{width:17px;height:17px}
+.mechanism-pager .collection-switch{border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:0;min-height:44px}
+@media(max-width:700px){.mechanism-pager .collection-switch span{display:none}.mechanism-pager .collection-switch{width:34px;min-width:34px;padding:0;justify-content:center}.pager-button{width:34px}}
 .clear-view .spec-button{width:40px;height:44px;min-width:40px;justify-content:center;padding:0;display:flex}
 .clear-view #viewport{min-height:100px;flex:1}
 .control-dock{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:28px;padding:6px 28px;background:var(--surface);border-top:1px solid var(--line);min-height:58px}
@@ -254,3 +260,8 @@
 .clear-view .onboarding h2{font-size:18px}
 }
 
+
+.mechanism-pager .collection-switch{border:0;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+@media(max-width:360px){.clear-view .machine-title h1{font-size:23px;letter-spacing:-.7px}}
+@media(orientation:landscape) and (max-height:550px){.clear-view .machine-title h1{font-size:20px;letter-spacing:-.5px}}
+.mechanism-pager .pager-button:focus-visible,.mechanism-pager .collection-switch:focus-visible{outline-offset:-3px}

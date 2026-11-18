@@ -364,7 +364,7 @@ export function createModel() {
     }
   }
   update(sample(0));
-  return { group: kit.group, update, framePoints, parts: kit.parts, stats: kit.stats, views: { home: [4.5, 2.2, -2.7], side: [5, 1.2, 0], front: [0, 1.35, -5], detail: [-3.5, 1.9, -4], exploded: [3.3, 2.6, -4.3] },
+  return { group: kit.group, update, framePoints, parts: kit.parts, stats: kit.stats, views: { home: [2.6, 1.9, -5.3], side: [5.4, 1.5, -0.6], front: [0, 1.5, -5.8], detail: [-3.6, 2.0, -4.4], exploded: [3.4, 2.6, -5.0] },
     get pickables() { return disposed ? [] : kit.pickables; },
     dispose() { if (!disposed) { disposed = true; kit.dispose(); kit.group.clear(); } } };
 }

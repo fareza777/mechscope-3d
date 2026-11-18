@@ -2,14 +2,16 @@
 
 ## Thirty-mechanism motion and horse verification: 18 November 2026
 
-EQUUS H8 (collection 030) was added, and eight existing mechanisms were rebuilt for thicker silhouettes and continuous motion: SENTINEL H9, MAMMUT M4, ABYSS S9, CERVUS B6, SPECULA O6, FABER R6, CHRONOS T3 and ORBIT P3. The changes were verified against the final source and production bundle in desktop Chrome.
+EQUUS H8 (collection 030) was added, nine existing mechanisms were rebuilt for thicker silhouettes and continuous motion (SENTINEL H9, MAMMUT M4, ABYSS S9, CERVUS B6, SPECULA O6, FABER R6, CHRONOS T3, ORBIT P3 and TERRA X7), and the separate display decks under MAMMUT and CERVUS were removed so their feet meet the floor directly. The changes were verified against the final source and production bundle in desktop Chrome.
 
-- Unit and integration suite: **306 tests, 305 passed, zero failed, one optional WebGL test skipped**.
+- Unit and integration suite: **310 tests, 309 passed, zero failed, one optional WebGL test skipped**.
 - The suite now includes `tests/motion.test.mjs`, a global gate that samples nine non-commensurate cycle phases per mechanism and requires at least `max(20, ceil(parts × 0.18))` moving part IDs and at least 24 moving instances. All thirty mechanisms pass. This avoids the phase-aliasing that made integer-ratio gear trains look motionless at simple fractions of their cycle.
 - All thirty mechanisms passed the desktop Chrome collection suite: measured changing pixels, real instance-transform pause/step behaviour, anatomy metadata and search, solid/X-ray/section, exact exploded and reassembled transforms, every simulation input at both limits, all five lessons, one live canvas per model, no controls over the canvas, labels of at least 12 CSS pixels, full-pixel-density rendering and responsive 360×640, 393×852, 852×393 and 1280×900 layouts.
+- The same suite exercises the on-screen previous/next controls: forward, backward and wrap-around transitions load the named model, and the pager stays outside the canvas at every tested viewport.
+- Opening orientation was audited across all thirty mechanisms: models that formerly opened on their rear now use a front-quarter camera (including SENTINEL, MAMMUT, CERVUS and the affected animals), the steam locomotive opens from its smokebox end, and unchanged symmetric/technical models keep their established view.
 - The production web bundle builds successfully. No 30-mechanism APK was installed or frame-timed on a phone: the previously used Redmi Note 11 was disconnected. Native results below remain historical evidence and do not certify this build.
 
-Motion counts over the nine non-commensurate phases (moving part IDs / total, then moving instances): SENTINEL 240/240 and 2,005; MAMMUT 266/274 and 1,855; ABYSS 159/167 and 1,464; CERVUS 182/190 and 1,410; SPECULA O6 165/194 and 1,433; FABER R6 123/180 and 807; CHRONOS T3 120/176 and 1,681; ORBIT P3 118/196 and 1,032; EQUUS 120/120 and 924. Fixed display bases remain static; the reworked models and EQUUS H8 are additionally covered by model-specific gates that name their moving subsystems.
+Motion counts over the nine non-commensurate phases (moving part IDs / total, then moving instances): SENTINEL 240/240 and 2,005; MAMMUT 266/266 and 1,855; ABYSS 159/167 and 1,464; CERVUS 182/182 and 1,410; TERRA X7 89/103 and 875; SPECULA O6 165/194 and 1,433; FABER R6 123/180 and 807; CHRONOS T3 120/176 and 1,681; ORBIT P3 118/196 and 1,032; EQUUS 120/120 and 924. MAMMUT and CERVUS no longer carry display bases, so their feet are the only floor contacts.
 
 ## DRACONIS D6 addition: 18 November 2026
 
@@ -45,11 +47,11 @@ Measured from submitted instance buffers in the model tests; low tiers keep ever
 | TITAN S6 | 125 | 1,823 | 87,420 | 56,148 | 19 |
 | CHRONOS T3 | 176 | 2,282 | 97,740 | 79,728 | 16 |
 | SENTINEL H9 | 240 | 2,005 | 102,360 | 59,616 | 31 |
-| MAMMUT M4 | 274 | 1,895 | 108,132 | 58,704 | 26 |
+| MAMMUT M4 | 266 | 1,855 | 106,500 | 58,488 | 26 |
 | ABYSS S9 | 167 | 1,528 | 82,236 | 56,124 | 22 |
-| CERVUS B6 | 190 | 1,450 | 91,992 | 57,888 | 26 |
+| CERVUS B6 | 182 | 1,410 | 90,360 | 57,672 | 26 |
 | ASTRARIUM OR-9 | 102 | 1,322 | 65,448 | 58,332 | 20 |
-| TERRA X7 | 84 | 577 | 30,312 | 22,032 | 21 |
+| TERRA X7 | 103 | 998 | 52,788 | 29,460 | 23 |
 | SPECULA O6 | 194 | 1,698 | 92,172 | 50,412 | 22 |
 | HARMONIA P8 | 118 | 712 | 41,724 | 25,908 | 16 |
 | FABER R6 | 180 | 1,187 | 69,720 | 34,980 | 29 |

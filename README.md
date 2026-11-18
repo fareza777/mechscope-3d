@@ -43,7 +43,7 @@ The production Gradle variant refuses to build without real advertising configur
 
 ## The experience
 
-- **Explore:** Thirty PBR procedural mechanisms, environment reflections, studio lighting, shadows, 360° orbit, pinch zoom, camera presets and immersive view. Playback and camera controls stay outside the canvas; compact statistics preserve viewer space.
+- **Explore:** Thirty PBR procedural mechanisms, environment reflections, studio lighting, shadows, 360° orbit, pinch zoom, camera presets, on-screen previous/next navigation and immersive view. Playback and camera controls stay outside the canvas; compact statistics preserve viewer space.
 - **Anatomy:** Select model components or search the component index; inspect purpose, mechanism, material and live readouts. Solid, X-ray and section modes.
 - **How it works:** Five measured, model-specific lessons per mechanism, linked to camera, material and explosion states.
 - **Exploded:** Continuously separate and reassemble subassemblies without switching to a video or another model.

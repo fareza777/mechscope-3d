@@ -554,36 +554,6 @@ export function createModel() {
     add(cerci, 'sphere', 'rubber', [side * .050, -.034, .13], [.007, .010, .007], [0, 0, 0], true);
   }
 
-  // ------------------------------------------------------------------ fixed service stand (static negative controls)
-  for (const side of [-1, 1]) {
-    const id = side < 0 ? 'L' : 'R';
-    const rail = part(`stand.rail.${id}`, `Fixed ${side < 0 ? 'left' : 'right'} service stand rail`, 'Service stand',
-      'Provides a fixed display edge for the scuttling exhibit.',
-      'A dark floor rail, titanium wear strip, rubber bumper and two brass wear bolts never move with the beetle.', undefined, [0, .02, 0], 'Dark steel, titanium strip and rubber bumper');
-    rail.position.set(side * .66, 0, .06);
-    plate(rail, 'dark', [0, .022, 0], [.09, .044, 1.54]);
-    plate(rail, 'titanium', [0, .050, 0], [.055, .012, 1.48]);
-    plate(rail, 'rubber', [side * -.025, .035, 0], [.018, .030, 1.42], [0, 0, 0], true);
-  }
-  for (const front of [true, false]) {
-    const cross = part(`stand.cross.${front ? 'front' : 'rear'}`, `Fixed ${front ? 'front' : 'rear'} service stand tie`, 'Service stand',
-      'Ties both fixed service stand rails on the display centerline.',
-      'A dark cross bar, two titanium plates and four brass anchors stay on the floor.', undefined, [0, .02, 0], 'Dark steel, titanium plates and brass anchors');
-    plate(cross, 'dark', [0, .022, front ? -.70 : .84], [1.44, .044, .10]);
-    for (const side of [-1, 1]) plate(cross, 'titanium', [side * .28, .050, front ? -.70 : .84], [.20, .012, .07], [0, 0, 0], true);
-    kit.fasteners(cross, [[-.56, .045, front ? -.70 : .84], [.56, .045, front ? -.70 : .84]], .009);
-  }
-  for (let k = 0; k < 4; k++) {
-    const anchor = part(`stand.anchor.${k + 1}`, `Fixed service stand anchor pad ${k + 1}`, 'Service stand',
-      'Bolts the service stand to the floor at one corner.',
-      'A dark pad, brass anchor bolt, titanium washer and rubber isolator never move with the beetle.', undefined, [0, .02, 0], 'Dark pad, brass bolt and rubber isolator');
-    const x = k % 2 ? .58 : -.58, z = k < 2 ? -.68 : .82;
-    plate(anchor, 'dark', [x, .018, z], [.15, .036, .15]);
-    add(anchor, 'bolt', 'brass', [x, .060, z], [.024, .048, .024]);
-    add(anchor, 'cylinder', 'titanium', [x, .042, z], [.042, .011, .042], [0, 0, 0], true);
-    add(anchor, 'sphere', 'rubber', [x, .020, z], [.052, .010, .052], [0, 0, 0], true);
-  }
-
   const bind = nodes.map(node => ({ node, p: node.position.clone(), q: node.quaternion.clone(), s: node.scale.clone() }));
   function update(state = lastState, options = {}) {
     if (disposed) return;

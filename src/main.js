@@ -7,6 +7,7 @@ import './style.css';
 import { icon } from './icons.js';
 import { MECHANISMS } from './catalog.js';
 import { createStage } from './viewer/stage.js';
+import { HOME_VIEWS } from './viewer/orientation.js';
 let mechanism = MECHANISMS[0];
 let { sample: sampleSpider, defaultInputs: DEFAULT_INPUT, lessons: LESSONS } = mechanism;
 const cycleHz = () => mechanism.cycleHz(state.input);
@@ -31,7 +32,7 @@ app.innerHTML = `
     <div class="header-actions"><span class="offline">${icon('check')} OFFLINE READY</span><button class="icon-button" id="settings" aria-label="Settings">${icon('settings')}</button></div>
   </header>
   <main id="workspace">
-    <section class="machine-title"><div><span class="eyebrow" id="machine-family">MECHANICAL SPIDER · 001 / ${String(MECHANISMS.length).padStart(3, '0')}</span><h1 id="machine-name">ARACHNE SC–08</h1></div><div class="machine-actions"><button class="collection-switch" id="collection-switch" aria-label="Choose a mechanism">${icon('anatomy')}<span>Collection</span></button><button class="spec-button" id="machine-info" aria-label="Mechanism field notes">${icon('info')}</button></div></section>
+    <section class="machine-title"><div><span class="eyebrow" id="machine-family">MECHANICAL SPIDER · 001 / ${String(MECHANISMS.length).padStart(3, '0')}</span><h1 id="machine-name">ARACHNE SC–08</h1></div><div class="machine-actions"><div class="mechanism-pager" role="group" aria-label="Browse mechanisms"><button class="pager-button" id="previous-mechanism" aria-label="Previous mechanism">${icon('back')}</button><button class="collection-switch" id="collection-switch" aria-label="Choose a mechanism">${icon('anatomy')}<span>Collection</span></button><button class="pager-button" id="next-mechanism" aria-label="Next mechanism">${icon('chevron')}</button></div><button class="spec-button" id="machine-info" aria-label="Mechanism field notes">${icon('info')}</button></div></section>
     <section id="viewport" aria-label="Unobstructed 3D mechanical viewer">
       <div class="loading" id="loading"><img src="./brand/mechscope.svg" alt=""/><strong>Engineering, revealed.</strong><span>Preparing the mechanical studio</span><i></i></div>
     </section>
@@ -253,6 +254,15 @@ $('#settings').addEventListener('click', showSettings);
 $('#machine-info').addEventListener('click', showMachineInfo);
 $('#library').addEventListener('click', showLibrary);
 $('#collection-switch').addEventListener('click', showLibrary);
+function shiftMechanism(delta) {
+  if (switching) return;
+  const index = MECHANISMS.findIndex(m => m.id === mechanism.id);
+  const next = MECHANISMS[(index + delta + MECHANISMS.length) % MECHANISMS.length];
+  if (next.id === mechanism.id) return;
+  changeMechanism(next.id).catch(showLoadError);
+}
+$('#previous-mechanism').addEventListener('click', () => shiftMechanism(-1));
+$('#next-mechanism').addEventListener('click', () => shiftMechanism(1));
 $('#play').addEventListener('click', () => setPlaying(!state.playing));
 $('#speed').addEventListener('click', () => { const speeds = [1, 0.5, 0.25, 2]; state.speed = speeds[(speeds.indexOf(state.speed) + 1) % speeds.length]; $('#speed').textContent = `${state.speed}×`; });
 $('#step').addEventListener('click', () => { setPlaying(false); state.t += 1 / (36 * cycleHz()); });
@@ -300,6 +310,7 @@ async function changeMechanism(id) {
   try {
     if (!$('#loading')) $('#viewport').insertAdjacentHTML('beforeend', '<div class="loading" id="loading"><strong>Preparing your mechanism…</strong><span>Building the mechanical anatomy</span><i></i></div>');
     const model = await next.createModel();
+    if (HOME_VIEWS[next.id]) model.views = { ...(model.views || {}), ...HOME_VIEWS[next.id] };
     const pose = next.sample(0, next.defaultInputs);
     model.update(pose, { explode: 0, mode: 'solid', selectedId: null, quality: state.quality });
     graphicsEvents?.abort(); stage?.dispose(); spider?.dispose();

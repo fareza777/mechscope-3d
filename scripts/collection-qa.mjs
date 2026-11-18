@@ -81,6 +81,18 @@ try {
   const catalog = await page.evaluate(() => window.__mechscope.catalog);
   assert.equal(catalog.length, 30, 'All thirty mechanisms are bundled offline');
   assert.equal(new Set(catalog.map(model => model.id)).size, 30, 'Collection entries are unique');
+  const [first, second] = catalog;
+  await page.locator('#next-mechanism').click();
+  await page.waitForFunction(id => window.__mechscope.state.mechanismId === id && !window.__mechscope.state.switching, second.id, { timeout: 60000 });
+  assert.equal((await page.locator('#machine-name').innerText()).trim(), second.title, 'Next steps forward one mechanism');
+  await page.locator('#previous-mechanism').click();
+  await page.waitForFunction(id => window.__mechscope.state.mechanismId === id && !window.__mechscope.state.switching, first.id, { timeout: 60000 });
+  assert.equal((await page.locator('#machine-name').innerText()).trim(), first.title, 'Previous steps back one mechanism');
+  await page.locator('#previous-mechanism').click();
+  await page.waitForFunction(id => window.__mechscope.state.mechanismId === id && !window.__mechscope.state.switching, catalog.at(-1).id, { timeout: 60000 });
+  await page.locator('#next-mechanism').click();
+  await page.waitForFunction(id => window.__mechscope.state.mechanismId === id && !window.__mechscope.state.switching, first.id, { timeout: 60000 });
+  results.checks.push('On-screen previous/next controls step through the collection and wrap around');
   await page.locator('#collection-switch').click();
   assert.equal(await page.locator('.collection-card').count(), 30, 'Every mechanism is reachable from the collection sheet');
   await page.locator('#close-sheet').click();

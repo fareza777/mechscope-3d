@@ -109,7 +109,7 @@ test('MAMMUT M4: trunk curl, ear flare, tusk and gait inputs change real geometr
   assert.notDeepEqual(later.tusks.map(t => t.lift), base.tusks.map(t => t.lift));
 });
 
-test('MAMMUT M4: deep layered mass, 274 indexed parts and the 85-125k triangle budget', async () => {
+test('MAMMUT M4: deep layered mass and the 85-125k triangle budget', async () => {
   const d = descriptor('mammut');
   const model = await d.createModel();
   try {
@@ -127,7 +127,8 @@ test('MAMMUT M4: deep layered mass, 274 indexed parts and the 85-125k triangle b
       'head.tusk.L', 'head.tuskTip.R', 'head.tuskCollar.L', 'head.ear.L', 'head.ear.R.tip',
       'head.ear.L.hinge', 'trunk.1.frame', 'trunk.14.band', 'trunk.8.ram.L', 'trunk.14.frame',
       'tail.1.frame', 'tail.7.scute', 'tail.base', 'tail.tuft', 'howdah.deck', 'howdah.rail.L',
-      'howdah.crate', 'drive.FL.gear', 'drive.RR', 'deck.rail.L']) assert.ok(ids.has(id), id);
+      'howdah.crate', 'drive.FL.gear', 'drive.RR']) assert.ok(ids.has(id), id);
+    assert.ok(!model.parts.some(part => part.id.startsWith('deck.')), 'no display deck is built');
     assert.ok(model.framePoints.length > 400, 'camera envelope is sampled');
     const state = d.sample(.317, d.defaultInputs);
     model.update(state, { quality: 'balanced', mode: 'solid', explode: 0 });
@@ -173,12 +174,12 @@ test('MAMMUT M4: herd motion moves the trunk, ears, tail, head, howdah and all f
     const a = mammut.poseAt(.4, mammut.DEFAULT_INPUTS), b = mammut.poseAt(2.1, mammut.DEFAULT_INPUTS);
     assert.notDeepEqual(a.trunk.points.at(-1), b.trunk.points.at(-1));
     assert.notDeepEqual(a.legs[0].footLocal, b.legs[0].footLocal);
-    // Negative control: fixed deck rails never move, repeated poses are identical, root stays fixed.
+    // Negative control: repeated poses are identical and the root stays fixed.
     model.update(d.sample(offsets[0]), { quality: 'balanced', mode: 'solid', explode: 0 });
     const repeated = instanceSnapshot(model);
     model.update(d.sample(offsets[0]), { quality: 'balanced', mode: 'solid', explode: 0 });
     assert.deepEqual(instanceSnapshot(model), repeated, 'a repeated pose produces identical matrices');
-    for (const id of ['deck.rail.L', 'deck.rail.R', 'deck.cross.front', 'deck.anchor.1']) assert.ok(!movingParts.has(id), `${id} is a static control`);
+    assert.ok(!model.parts.some(part => part.id.startsWith('deck.')), 'no static display deck remains');
     assert.deepEqual(model.group.position.toArray(), [0, 0, 0]);
     assert.deepEqual(model.group.quaternion.toArray(), [0, 0, 0, 1]);
     assert.deepEqual(model.group.scale.toArray(), [1, 1, 1]);
@@ -420,7 +421,8 @@ test('CERVUS B6: thick layered elytra, broad armour and 1000-1600 instance budge
       'mandible.R.serration', 'antenna.L.ball', 'antenna.L.club', 'antenna.L.lamella', 'antenna.R.ball',
       'abdomen.6.tergite', 'abdomen.7.tip', 'body.pronotum', 'body.bellyRib.1', 'body.bellyRam.L',
       'leg.FL.femurArmor', 'leg.RR.tibiaArmor', 'leg.ML.foot', 'leg.RR.claws', 'head.mouth.labrum',
-      'head.mouth.palp.L', 'head.mouth.maxilla.R', 'stand.rail.L']) assert.ok(ids.has(id), id);
+      'head.mouth.palp.L', 'head.mouth.maxilla.R']) assert.ok(ids.has(id), id);
+    assert.ok(!model.parts.some(part => part.id.startsWith('stand.')), 'no display stand is built');
     assert.ok(model.framePoints.length > 200, 'camera envelope is sampled');
     const state = d.sample(.317, d.defaultInputs);
     model.update(state, { quality: 'balanced', mode: 'solid', explode: 0 });
@@ -474,12 +476,12 @@ test('CERVUS B6: display gait moves pincers, antennae, elytra, abdomen and every
     const first = [cover.rotation.x, cover.rotation.z];
     model.update(d.sample(1.9), { quality: 'balanced', mode: 'solid', explode: 0 });
     assert.notDeepEqual([cover.rotation.x, cover.rotation.z], first, 'elytra covers breathe through the cycle');
-    // Negative control: specimen stand parts are static, repeats are exact and the root never translates.
+    // Negative control: repeats are exact and the root never translates.
     model.update(d.sample(offsets[0]), { quality: 'balanced', mode: 'solid', explode: 0 });
     const repeated = instanceSnapshot(model);
     model.update(d.sample(offsets[0]), { quality: 'balanced', mode: 'solid', explode: 0 });
     assert.deepEqual(instanceSnapshot(model), repeated, 'a repeated pose produces identical matrices');
-    for (const id of ['stand.rail.L', 'stand.rail.R', 'stand.cross.front', 'stand.anchor.1']) assert.ok(!movingParts.has(id), `${id} is a static control`);
+    assert.ok(!model.parts.some(part => part.id.startsWith('stand.')), 'no static display stand remains');
     assert.deepEqual(model.group.position.toArray(), [0, 0, 0]);
     assert.deepEqual(model.group.quaternion.toArray(), [0, 0, 0, 1]);
     assert.deepEqual(model.group.scale.toArray(), [1, 1, 1]);

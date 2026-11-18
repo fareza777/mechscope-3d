@@ -3,7 +3,7 @@ import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
 export const descriptor = {
   id: 'mammut', title: 'MAMMUT M4', family: 'Quadrupedal Mammoth Mechanism', collection: '021',
   tagline: 'Four planted legs, a fourteen-link trunk and a layered howdah that never stretches.',
-  description: 'A massive mammoth-shaped mechanical anatomy study: a deep barrel chassis with layered flank armour over sixteen open ribs, four inverse-kinematic columnar legs with wide feet and geared hip cases, an eight-vertebra spine, a fourteen-link curling trunk with paired joint rams, flapping ear fans, collared curved tusks, a seven-link tail and a bolted riding howdah. Every rigid pin spacing is exact and the trunk cap stays at its solved length; muscle force, ground pressure and balance are not simulated, the pale shells are artistic representations and the fixed floor deck is only a service stand.',
+  description: 'A massive mammoth-shaped mechanical anatomy study: a deep barrel chassis with layered flank armour over sixteen open ribs, four inverse-kinematic columnar legs with wide feet and geared hip cases, an eight-vertebra spine, a fourteen-link curling trunk with paired joint rams, flapping ear fans, collared curved tusks, a seven-link tail and a bolted riding howdah. Every rigid pin spacing is exact and the trunk cap stays at its solved length; muscle force, ground pressure and balance are not simulated, and the pale shells are artistic representations.',
   defaultInputs: DEFAULT_INPUTS,
   controls: [
     { key: 'cadence', label: 'Walk cadence', min: 0.12, max: 0.7, step: 0.01, unit: 'Hz', precision: 2 },
@@ -28,7 +28,7 @@ export const descriptor = {
       text: 'The head turns on a transverse gimbal and carries two curved tusks with bolted root collars, replaceable wear tips, two large hinged ear fans, a lower jaw and the trunk socket. Each ear is an open lattice of six ribs, four cross-braces, a layered outer panel and a hinged tip vane, and turns around its own pivot with the ear-flare control plus a travelling flap wave. The tusks are rigid geometry anchored to the cranium and do not intersect the trunk envelope.',
       fact: 'Ear flare is a prescribed inspection angle; no airflow, hearing or thermal exchange is computed.', view: 'top', mode: 'solid', explode: 0.3 },
     { title: 'What moves, what is only shown', short: 'Know the limits',
-      text: 'The gait, knee solutions, trunk and tail chains, head gimbal, ear hinges, tusk sway, howdah straps, gearbox gears and paired joint rams come from one sampled pose. Hydraulic collars, copper service lines, the fixed floor deck and the layered armour are structural illustrations. The model does not solve dynamics, soft tissue, mud, foot pressure, actuator load or stability on uneven ground, and it is not a validated mammoth reconstruction.',
+      text: 'The gait, knee solutions, trunk and tail chains, head gimbal, ear hinges, tusk sway, howdah straps, gearbox gears and paired joint rams come from one sampled pose. Hydraulic collars, copper service lines and the layered armour are structural illustrations. The model does not solve dynamics, soft tissue, mud, foot pressure, actuator load or stability on uneven ground, and it is not a validated mammoth reconstruction.',
       fact: 'A complete gait cycle repeats exactly and can be paused, stepped or scrubbed without drift.', view: 'home', mode: 'cutaway', explode: 0.5 },
   ],
   async createModel() { return (await import('./model.js')).createModel(); },

@@ -681,40 +681,7 @@ export function createModel() {
   for (let k = 0; k < 4; k++) rod(lantern, 'dark', [.020 * Math.cos(k * TAU / 4), .29, -.24 + .020 * Math.sin(k * TAU / 4)], [.020 * Math.cos(k * TAU / 4), .36, -.24 + .020 * Math.sin(k * TAU / 4)], .002, true);
   add(lantern, 'cylinder', 'brass', [0, .375, -.24], [.028, .020, .028], [0, 0, 0], true);
 
-  // ------------------------------------------------------------------ fixed service deck (static negative controls)
-  const deckL = part('deck.rail.L', 'Fixed left service deck rail', 'Service deck',
-    'Provides a fixed work-platform edge for the walking display.',
-    'A dark floor rail, titanium wear strip, rubber bumper and two anchor plates never move with the herd.', undefined, [0, .02, 0], 'Dark steel, titanium strip and rubber bumper');
-  deckL.position.set(-.74, 0, .05);
-  plate(deckL, 'dark', [0, .025, 0], [.10, .05, 1.72]);
-  plate(deckL, 'titanium', [0, .055, 0], [.06, .012, 1.66]);
-  plate(deckL, 'rubber', [.03, .04, 0], [.02, .035, 1.60], [0, 0, 0], true);
-  const deckR = part('deck.rail.R', 'Fixed right service deck rail', 'Service deck',
-    'Provides a fixed work-platform edge for the walking display.',
-    'A dark floor rail, titanium wear strip, rubber bumper and two anchor plates never move with the herd.', undefined, [0, .02, 0], 'Dark steel, titanium strip and rubber bumper');
-  deckR.position.set(.74, 0, .05);
-  plate(deckR, 'dark', [0, .025, 0], [.10, .05, 1.72]);
-  plate(deckR, 'titanium', [0, .055, 0], [.06, .012, 1.66]);
-  plate(deckR, 'rubber', [-.03, .04, 0], [.02, .035, 1.60], [0, 0, 0], true);
-  for (const front of [true, false]) {
-    const cross = part(`deck.cross.${front ? 'front' : 'rear'}`, `Fixed ${front ? 'front' : 'rear'} service deck cross tie`, 'Service deck',
-      'Ties both fixed deck rails on the centerline of the service bay.',
-      'A dark cross bar, two titanium plates and four brass anchors stay on the floor.', undefined, [0, .02, 0], 'Dark steel, titanium plates and brass anchors');
-    plate(cross, 'dark', [0, .025, front ? -.82 : .88], [1.58, .05, .12]);
-    for (const side of [-1, 1]) plate(cross, 'titanium', [side * .30, .055, front ? -.82 : .88], [.22, .012, .08], [0, 0, 0], true);
-    kit.fasteners(cross, [[-.62, .05, front ? -.82 : .88], [.62, .05, front ? -.82 : .88]], .010);
-  }
-  for (let k = 0; k < 4; k++) {
-    const anchor = part(`deck.anchor.${k + 1}`, `Fixed deck anchor pad ${k + 1}`, 'Service deck',
-      'Bolts the service deck to the floor at one corner.',
-      'A dark pad, brass anchor bolt, titanium washer and rubber isolator never move with the herd.', undefined, [0, .02, 0], 'Dark pad, brass bolt and rubber isolator');
-    const x = k % 2 ? .64 : -.64, z = k < 2 ? -.78 : .84;
-    plate(anchor, 'dark', [x, .018, z], [.16, .036, .16]);
-    add(anchor, 'bolt', 'brass', [x, .06, z], [.026, .05, .026]);
-    add(anchor, 'cylinder', 'titanium', [x, .04, z], [.045, .012, .045], [0, 0, 0], true);
-    add(anchor, 'sphere', 'rubber', [x, .020, z], [.055, .010, .055], [0, 0, 0], true);
-  }
-
+  // ------------------------------------------------------------------ animation bind
   const bind = nodes.map(node => ({ node, p: node.position.clone(), q: node.quaternion.clone(), s: node.scale.clone() }));
   function update(state = lastState, options = {}) {
     if (disposed) return;

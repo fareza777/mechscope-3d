@@ -3,7 +3,7 @@ import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
 export const descriptor = {
   id: 'cervus', title: 'CERVUS B6', family: 'Stag Beetle Mechanism', collection: '023',
   tagline: 'Six heavy armoured legs, layered lifting elytra and two three-link pincers.',
-  description: 'A massive stag-beetle-shaped mechanism: a broad armoured pronotum and thorax, six three-link legs in an alternating tripod gait with layered femurs, tibias and wide clawed tarsi, a segmented abdomen with pleurites and spiracles, two five-segment ball-joint antennae, a pair of 820 mm serrated pincers, mouthparts, and thick two-layer elytra that lift on a common hinge over folded hind-wing membranes. Link lengths are exact and the gait is deterministic; shell flex, grip force, flight and real insect behavior are not simulated, and the fixed floor stand is only a service display.',
+  description: 'A massive stag-beetle-shaped mechanism: a broad armoured pronotum and thorax, six three-link legs in an alternating tripod gait with layered femurs, tibias and wide clawed tarsi, a segmented abdomen with pleurites and spiracles, two five-segment ball-joint antennae, a pair of 820 mm serrated pincers, mouthparts, and thick two-layer elytra that lift on a common hinge over folded hind-wing membranes. Link lengths are exact and the gait is deterministic; shell flex, grip force, flight and real insect behavior are not simulated.',
   defaultInputs: DEFAULT_INPUTS,
   controls: [
     { key: 'cadence', label: 'Scuttle cadence', min: 0.15, max: 0.9, step: 0.01, unit: 'Hz', precision: 2 },
