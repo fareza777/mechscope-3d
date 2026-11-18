@@ -33,8 +33,8 @@ export function createModel() {
   }
   // Z-normal, open-spoked gears: unlike kit.gear(), no solid web disk.
   // Tangent box teeth are deliberately conceptual rather than involute teeth.
-  function openGear(n, radius, teeth, thickness = .027, material = 'brass') {
-    for (const z of [-thickness * .30, thickness * .30]) hoop(n, material, [0, 0, z], radius * .95, Math.max(.0025, radius * .021));
+  function openGear(n, radius, teeth, thickness = .027, material = 'brass', rimSegments = 16) {
+    for (const z of [-thickness * .30, thickness * .30]) hoop(n, material, [0, 0, z], radius * .95, Math.max(.0025, radius * .021), rimSegments);
     axial(n, 'dark', [0, 0, 0], radius * .14, thickness * 1.7);
     for (let k = 0; k < teeth; k++) {
       const a = k * TAU / teeth;
@@ -118,6 +118,61 @@ export function createModel() {
     const a = k * TAU / 6;
     rod(pinion, 'titanium', [0, 0, 0], [.071 * Math.cos(a), .071 * Math.sin(a), 0], .005);
   }
+  // Secondary seconds train: 30-tooth third wheel -> 10-tooth fourth pinion,
+  // then a 30-tooth transfer wheel on that arbor -> 6-tooth seconds pinion.
+  // The fifteen-times speed increase is exact and returns to every tooth phase
+  // after the master cycle; the seconds hand is carried by the last arbor.
+  const fourthPinion = part('train4.pinion', 'Ten-tooth fourth-arbor pinion', 'Exact seconds train', 'Take an exact three-to-one speed increase from the thirty-tooth third wheel.', 'A compact open pinion in the front train plane meshes the third wheel at the sum of pitch radii; a long arbor reaches the transfer plane.', undefined, [.02, .10, .06], 'Titanium pinion, brass tooth faces');
+  fourthPinion.position.fromArray(D.extended.pinion.center);
+  openGear(fourthPinion, D.extended.pinion.radius, D.extended.pinion.teeth, .024, 'titanium', 10);
+  const fourthArbor = part('train4.arbor', 'Fourth-arbor through spindle', 'Train bearings', 'Carry the ten-tooth pinion and the thirty-tooth transfer wheel on one axis.', 'A slender spindle reaches from the rear bridge to the forward transfer plane with two visible collars.', fourthPinion, [0, 0, .08], 'Polished titanium spindle');
+  axial(fourthArbor, 'titanium', [0, 0, .085], .013, .40);
+  for (const z of [-.085, .075]) add(fourthArbor, 'ring', 'dark', [0, 0, z], [.024, .024, .018]);
+  const transfer = part('train4.transfer', 'Thirty-tooth seconds transfer wheel', 'Exact seconds train', 'Drive the six-tooth seconds pinion with an exact thirty-to-six ratio.', 'A large open transfer wheel on the fourth arbor occupies a separate forward lane outside the tourbillon cage.', fourthPinion, [0, .05, .09], 'Brass open wheel, titanium hub');
+  transfer.position.z = .275; openGear(transfer, D.extended.transfer.radius, D.extended.transfer.teeth, .022, 'brass', 14);
+  for (let bay = 0; bay < 4; bay++) {
+    const a = bay * TAU / 4;
+    const spoke = part(`train4.spoke.${bay}`, `Transfer wheel open spoke ${bay + 1}`, 'Gear spokes', 'Tie the thirty-tooth transfer rim to its fourth arbor without a solid web.', 'Three short rails and a bolted root leave the transfer wheel visibly open.', transfer, [.02 * Math.cos(a), .02 * Math.sin(a), .04]);
+    const p = (r, da = 0) => [r * Math.cos(a + da), r * Math.sin(a + da), 0];
+    for (const da of [-.055, .055]) rod(spoke, 'brass', p(.045, da), p(.135, da), .0042);
+    rod(spoke, 'titanium', p(.075), p(.125), .0032);
+  }
+  const fourthBridge = part('train4.bridge', 'Fourth-arbor rear jewel bridge', 'Movement bridges', 'Locate the seconds-train arbor against the fixed rear annulus.', 'Two thin diagonal stays and a jeweled seat sit behind the transfer wheel, leaving the front view open.', undefined, [0, .07, -.13]);
+  const fourthAngle = Math.atan2(D.extended.pinion.center[1] - D.center[1], D.extended.pinion.center[0]);
+  for (const da of [-.16, .16]) {
+    const anchor = [.86 * Math.cos(fourthAngle + da), D.center[1] + .86 * Math.sin(fourthAngle + da), -.28];
+    rod(fourthBridge, 'titanium', [D.extended.pinion.center[0], D.extended.pinion.center[1], -.275], anchor, .012);
+    screw(fourthBridge, [anchor[0], anchor[1], -.268], .010);
+  }
+  jewel(fourthBridge, [D.extended.pinion.center[0], D.extended.pinion.center[1], -.274], .031);
+  const secondsPinion = part('seconds.pinion', 'Six-tooth seconds pinion', 'Exact seconds train', 'Turn the seconds hand sixty times faster than the minute display.', 'The small pinion meshes the thirty-tooth transfer wheel; 720 integer turns close the twelve-cage master cycle.', undefined, [0, .06, .10], 'Titanium pinion, teal second tip');
+  secondsPinion.position.fromArray(D.extended.seconds.center);
+  openGear(secondsPinion, D.extended.seconds.radius, D.extended.seconds.teeth, .018, 'titanium', 8);
+  const secondsArbor = part('seconds.arbor', 'Seconds-hand arbor', 'Train bearings', 'Carry the seconds wheel through the open front jewel bridge.', 'A fine spindle rises from the transfer plane to the seconds-hand hub above the index ring.', secondsPinion, [0, 0, .11], 'Polished titanium spindle');
+  axial(secondsArbor, 'titanium', [0, 0, .155], .009, .30);
+  add(secondsArbor, 'ring', 'brass', [0, 0, .035], [.018, .018, .014]);
+  const secondsHand = part('seconds.hand', 'Small seconds skeleton hand', 'Hand display', 'Indicate the exact 720-turn seconds sweep of the extended train.', 'A forked open pointer, countertail and teal tip ride on the seconds arbor in a lane below the hour hand.', secondsPinion, [0, 0, .13], 'Titanium pointer, teal tip');
+  for (const side of [-1, 1]) {
+    rod(secondsHand, 'titanium', [side * .010, .020, .245], [0, .098, .245], .0028);
+    rod(secondsHand, 'dark', [side * .006, -.030, .245], [side * .010, .020, .245], .0022);
+  }
+  rod(secondsHand, 'brass', [-.007, .056, .245], [.007, .056, .245], .0022);
+  add(secondsHand, 'ring', 'brass', [0, 0, .245], [.015, .015, .012]);
+  add(secondsHand, 'box', 'teal', [0, .092, .247], [.007, .024, .004]);
+  const subdial = part('seconds.subdial', 'Open small-seconds chapter ring', 'Index ring', 'Give the fast seconds hand a readable fixed scale.', 'A thin dark ring with eight brass ticks floats forward of the transfer wheel on a jeweled bridge.', undefined, [0, .03, .14]);
+  const sx = D.extended.seconds.center[0], sy = D.extended.seconds.center[1];
+  hoop(subdial, 'dark', [sx, sy, .386], .096, .0035, 12);
+  for (let k = 0; k < 8; k++) {
+    const a = k * TAU / 8;
+    add(subdial, 'box', k % 2 ? 'titanium' : 'brass', [sx + .083 * Math.cos(a), sy + .083 * Math.sin(a), .389], [.004, k % 2 ? .010 : .017, .003], [0, 0, a]);
+  }
+  const secondsBridge = part('seconds.bridge', 'Seconds-hand forward jewel bridge', 'Movement bridges', 'Support the high-speed seconds arbor above the movement face.', 'One curved stay rises from the outer frame to a jeweled hub; the seconds hand remains clear below the hour hand.', undefined, [0, .04, .10]);
+  const secAnchor = [.80 * Math.cos(Math.atan2(sy - D.center[1], sx)), D.center[1] + .80 * Math.sin(Math.atan2(sy - D.center[1], sx)), .372];
+  rod(secondsBridge, 'titanium', [sx, sy, .383], secAnchor, .010);
+  rod(secondsBridge, 'dark', [sx, sy, .383], [sx - .055, sy - .045, .392], .006);
+  jewel(secondsBridge, [sx, sy, .390], .020);
+  screw(secondsBridge, [secAnchor[0], secAnchor[1], .382], .009);
+
   for (let quadrant = 0; quadrant < 4; quadrant++) {
     const coil = part(`barrel.coil.${quadrant}`, `Exposed barrel spring quadrant ${quadrant + 1}`, 'Power barrel', 'Shows a copper-colored wound spring behind the barrel wheel spokes.', 'A fixed spiral of short segments turns with the barrel; stored energy and spring torque are not computed.', train[0], [0, 0, -.06], 'Copper-colored spring ribbon');
     const point = k => {
@@ -133,6 +188,26 @@ export function createModel() {
     rod(winding, 'titanium', [0, 0, 0], [.067 * Math.cos(a), .067 * Math.sin(a), 0], .006);
   }
   add(winding, 'box', 'brass', [0, 0, -.025], [.027, .027, .035]);
+  const ratchet = part('barrel.ratchet', 'Twelve-tooth barrel ratchet wheel', 'Power barrel', 'Show the winding ratchet that indexes the barrel arbor.', 'Twelve asymmetric ratchet teeth and a fine rim turn with the barrel behind the winding key socket.', train[0], [0, 0, -.08], 'Dark ratchet rim, brass teeth');
+  ratchet.position.z = -.205;
+  hoop(ratchet, 'dark', [0, 0, 0], .072, .004, 12);
+  axial(ratchet, 'brass', [0, 0, 0], .012, .018);
+  for (let k = 0; k < 12; k++) {
+    const a = k * TAU / 12;
+    add(ratchet, 'box', 'brass', [.068 * Math.cos(a), .068 * Math.sin(a), 0], [.023, .010, .014], [0, 0, a + .24]);
+    add(ratchet, 'box', 'titanium', [.051 * Math.cos(a), .051 * Math.sin(a), .009], [.010, .006, .004], [0, 0, a]);
+  }
+  const click = part('barrel.click', 'Barrel click lever and pawl', 'Power barrel', 'Index the ratchet one tooth at a time as the barrel turns.', 'A rocking lever with a dark pawl follows the twelve-tooth ratchet; the lever angle is a prescribed winding illustration.', undefined, [0, .05, -.10], 'Dark lever, brass pawl');
+  click.position.set(D.gearCenters[0][0] + .105, D.gearCenters[0][1] + .060, -.322);
+  rod(click, 'dark', [0, 0, 0], [-.043, -.024, 0], .0055);
+  add(click, 'box', 'brass', [-.046, -.026, 0], [.019, .011, .015], [0, 0, .62]);
+  screw(click, [0, 0, .012], .005);
+  const clickSpring = part('barrel.click.spring', 'Click return spring ribbon', 'Power barrel', 'Give the rocking click a visible return spring.', 'Five short constant-length copper segments curve from the click pivot to the front bridge.', click, [0, .04, -.06], 'Copper spring ribbon');
+  for (let k = 0; k < 5; k++) {
+    const t = k / 5, t2 = (k + 1) / 5;
+    const p = u => [.010 + .040 * Math.sin(u * 2.4), .008 - .028 * u, .002];
+    rod(clickSpring, 'copper', p(t), p(t2), .0022);
+  }
 
   const cage = part('cage', 'Central rotating tourbillon carrier', 'Tourbillon cage', 'Carries the balance and escapement in a rotating local reference frame.', 'A long central arbor and annular front and rear rails keep the cage skeletal instead of using an opaque disk.', undefined, [0, .05, .13]);
   cage.position.fromArray(D.center);
@@ -156,6 +231,26 @@ export function createModel() {
     const cap = part(`cage.cap.${k}`, `Cage peripheral bridge cap ${k + 1}`, 'Bridge armor', 'Protects an outer cage tie without hiding the oscillator.', 'A small removable pale plate stays at the rim, outside the balance sweep.', cage, [0, 0, .10], 'Pale alloy service cap');
     add(cap, 'box', 'shell', [x, y, .23], [.053, .031, .012], [0, 0, a]);
     screw(cap, [x, y, .241], .006);
+  }
+  const cageRollers = [];
+  for (let k = 0; k < 6; k++) {
+    const a = k * TAU / 6 + TAU / 12;
+    const x = .272 * Math.cos(a), y = .272 * Math.sin(a);
+    const roller = part(`cage.roller.${k}`, `Cage roller jewel ${k + 1}`, 'Cage structure', 'Show a rolling peripheral support between the cage columns.', 'A small brass tire, polished lens and screw spin on the front cage rail between adjacent columns.', cage, [.06 * Math.cos(a), .06 * Math.sin(a), .05], 'Brass roller, lens jewel');
+    roller.position.set(x, y, .208);
+    add(roller, 'ring', 'brass', [0, 0, 0], [.017, .017, .014]);
+    add(roller, 'sphere', 'lens', [0, 0, .010], [.009, .009, .006]);
+    add(roller, 'bolt', 'titanium', [0, 0, .004], [.005, .010, .005]);
+    cageRollers.push(roller);
+  }
+  for (let k = 0; k < 4; k++) {
+    const a = k * TAU / 4 + .17;
+    const jewelPart = part(`cage.jewel.${k}`, `Cage bridge jewel ${k + 1}`, 'Cage structure', 'Cap a lightweight cage bridge bearing with a visible jewel.', 'A brass seat, teal lens and two screws sit on a short radial tab inside the front rail.', cage, [.04 * Math.cos(a), .04 * Math.sin(a), .06], 'Brass jewel seat, teal lens');
+    const x = .245 * Math.cos(a), y = .245 * Math.sin(a);
+    rod(jewelPart, 'titanium', [.29 * Math.cos(a), .29 * Math.sin(a), .226], [x, y, .226], .0045);
+    add(jewelPart, 'ring', 'brass', [x, y, .228], [.014, .014, .012]);
+    add(jewelPart, 'sphere', 'lens', [x, y, .236], [.007, .007, .005]);
+    add(jewelPart, 'bolt', 'titanium', [x, y, .232], [.0035, .008, .0035], [Math.PI / 2, 0, 0]);
   }
   const balance = part('balance', 'Oscillating balance wheel and staff', 'Balance oscillator', 'Oscillates relative to the revolving cage with the selected safe amplitude.', 'Paired fine rims and an extended staff leave the hairspring and escapement visible; the motion is prescribed, not torque-integrated.', cage, [0, 0, .12]);
   balance.position.z = .066;
@@ -189,6 +284,16 @@ export function createModel() {
     const p = j => [.239 * Math.cos(.42 + j * .04), .239 * Math.sin(.42 + j * .04), .14];
     rod(regulator, 'titanium', p(k), p(k + 1), .004);
   }
+  const indexScale = part('balance.index.scale', 'Regulator index scale arc', 'Balance adjustment', 'Give the movable index a fixed graduated reference.', 'A second fine arc outside the inspection spring tail carries twelve graduated marks and a teal datum.', cage, [0, 0, .075]);
+  for (let k = 0; k < 12; k++) {
+    const a = -.55 + k * .085;
+    rod(indexScale, 'titanium', [.268 * Math.cos(a), .268 * Math.sin(a), .145], [.273 * Math.cos(a + .085), .273 * Math.sin(a + .085), .145], .0025);
+    if (k % 3 === 0) add(indexScale, 'box', k === 0 ? 'teal' : 'brass', [.276 * Math.cos(a), .276 * Math.sin(a), .146], [.008, .0025, .003], [0, 0, a]);
+  }
+  const index = part('balance.index', 'Movable regulator index finger', 'Balance adjustment', 'Visualize the regulator index position beside the free spring tail.', 'A short radial finger turns on the cage between the two arcs; its mean position follows the amplitude control.', cage, [0, 0, .09], 'Brass index finger, teal tip');
+  rod(index, 'brass', [.205 * Math.cos(.42), .205 * Math.sin(.42), .149], [.283 * Math.cos(.42), .283 * Math.sin(.42), .149], .0035);
+  add(index, 'box', 'teal', [.279 * Math.cos(.42), .279 * Math.sin(.42), .151], [.008, .018, .004], [0, 0, .42]);
+  add(index, 'ring', 'brass', [0, 0, .149], [.024, .024, .010]);
   for (const z of [-.17, .18]) {
     const bearing = part(`balance.bearing.${z}`, `${z < 0 ? 'Rear' : 'Front'} balance staff jewel bridge`, 'Balance bearings', 'Supports the central balance staff within the rotating cage.', 'A very narrow split bridge carries a jeweled center without becoming an opaque cover over the oscillator.', cage, [0, 0, z < 0 ? -.05 : .06]);
     for (const side of [-1, 1]) rod(bearing, 'titanium', [side * .29, 0, z], [side * .018, 0, z], .005);
@@ -216,6 +321,20 @@ export function createModel() {
   }
   rod(escapeBridge, 'titanium', [0, -.175, -.075], [0, -.092, .009], .006);
   add(escapeBridge, 'ring', 'brass', [0, -.092, .009], [.014, .014, .014], [Math.PI / 2, 0, 0]);
+  const escapePinion = part('escapement.pinion', 'Escape-wheel eight-tooth pinion', 'Escapement', 'Couple the intermittent escape arbor to its visible fan.', 'A small open pinion sits below the escape wheel on the same stepping axis; its teeth step only during the scheduled release window.', escape, [0, -.03, -.03], 'Titanium escape pinion');
+  escapePinion.position.set(0, 0, -.031);
+  openGear(escapePinion, .019, 8, .011, 'titanium', 6);
+  const escapeFan = part('escapement.fan', 'Three-turn escape fan and vanes', 'Escapement', 'Make the intermittent escape advance legible as a spinning air brake.', 'Four light vanes turn three times per escape-wheel turn, so the fan visibly accelerates only during release and dwells with the wheel.', escape, [0, -.05, -.03], 'Titanium fan, dark hub');
+  escapeFan.position.set(0, 0, -.057);
+  axial(escapeFan, 'dark', [0, 0, 0], .008, .012);
+  for (let k = 0; k < 4; k++) {
+    const a = k * TAU / 4;
+    add(escapeFan, 'box', k % 2 ? 'titanium' : 'brass', [.028 * Math.cos(a), .028 * Math.sin(a), 0], [.045, .011, .0035], [0, 0, a]);
+  }
+  add(escapeFan, 'ring', 'titanium', [0, 0, .006], [.023, .023, .010]);
+  const fanCock = part('escapement.fan.cock', 'Escape fan lower cock and jewel', 'Escapement bearings', 'Support the fan arbor without hiding its vanes.', 'A short curved stay reaches the lower cage rim and carries a small jewel behind the fan.', cage, [0, -.04, -.055]);
+  for (const side of [-1, 1]) rod(fanCock, 'titanium', [0, -.175, -.072], [side * .16, -.255, -.072], .0055);
+  jewel(fanCock, [0, -.175, -.071], .014);
   const fork = part('escapement.fork', 'Rocking pallet fork and roller slot', 'Escapement', 'Alternates between entry and exit pallet poses with the balance phase.', 'A narrow stem terminates in an open fork slot; its angle is a prescribed timing illustration rather than a contact solution.', cage, [0, -.045, .055]);
   fork.position.fromArray(D.forkCenter);
   rod(fork, 'dark', [0, 0, 0], [0, .069, 0], .005);
@@ -266,8 +385,14 @@ export function createModel() {
     else if (Number.isFinite(state?.driveAngle)) lastState = poseAt(state.driveAngle, lastState.controls);
     for (const { node, p, q } of bind) { node.position.copy(p); node.quaternion.copy(q); }
     train.forEach((node, i) => { node.rotation.z = lastState.gearAngles[i]; });
+    fourthPinion.rotation.z = lastState.extendedAngles[0];
+    secondsPinion.rotation.z = lastState.extendedAngles[2];
     cage.rotation.z = lastState.cageAngle; balance.rotation.z = lastState.balanceAngle;
     escape.rotation.z = lastState.escapeAngle; fork.rotation.z = lastState.forkAngle;
+    escapeFan.rotation.z = 2 * lastState.escapeAngle;
+    cageRollers.forEach((node, i) => { node.rotation.z = lastState.cageRollerAngle + i * TAU / 6; });
+    click.rotation.z = lastState.clickAngle;
+    index.rotation.z = lastState.regulatorAngle;
     springLinks.forEach((node, i) => {
       const a = lastState.springPoints[i], b = lastState.springPoints[i + 1];
       kit.aim(node, a, b);

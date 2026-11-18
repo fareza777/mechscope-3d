@@ -70,7 +70,7 @@ export function createStage(container, spider, onPick, invalidate = () => {}) {
   if (framePoints) for (const p of framePoints) corners.push(p.clone().sub(center));
   else for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) corners.push(new THREE.Vector3(x, y, z).sub(center));
   let fittedView = 'home';
-  const views = { home: [3.4, 2.65, 4.1], side: [5, 1.2, .5], top: [.06, 6, .08], front: [0, 1.2, 5], detail: [-3.5, 1.9, 4], exploded: [3.3, 2.6, 4.3] };
+  const views = { home: [3.4, 2.65, 4.1], side: [5, 1.2, .5], top: [.06, 6, .08], front: [0, 1.2, 5], detail: [-3.5, 1.9, 4], exploded: [3.3, 2.6, 4.3], ...(spider.views || {}) };
   function view(name = 'home', immediate = false) {
     fittedView = name;
     const direction = new THREE.Vector3(...(views[name] || views.home)).normalize();

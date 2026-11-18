@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import descriptor from '../src/mechanisms/planetary/index.js';
-import { P, TAU, DEFAULT_INPUTS, cycleHz, pose, sample } from '../src/mechanisms/planetary/kin.js';
+import { P, TAU, DEFAULT_INPUTS, PUMP, cycleHz, pose, sample } from '../src/mechanisms/planetary/kin.js';
 import { createModel } from '../src/mechanisms/planetary/model.js';
 
 const near = (a, b, e = 1e-8) => assert.ok(Math.abs(a - b) <= e, `${a} != ${b}`);
@@ -114,6 +114,24 @@ test('absolute gear ratios and all nominal pitch phases close across the full or
   assert.deepEqual(pose(.2, 0).planets, pose(.2, 1).planets, 'Service sleeve must not break the gear ratios');
 });
 
+test('auxiliary pump ratios are exact integer turns and selector motion preserves the Willis relation', () => {
+  for (let i = 0; i < 720; i++) {
+    const s = pose(i / 720, .35), d = s.driveAngle;
+    near(s.pumpAngles[0] - PUMP.phases[0], d, 1e-12);
+    near(s.pumpAngles[1] - PUMP.phases[1], -2 * d, 1e-12);
+    near(s.pumpAngles[2] - PUMP.phases[2], d, 1e-12);
+    near(12 * (s.pumpAngles[0] - PUMP.phases[0]) + 6 * (s.pumpAngles[1] - PUMP.phases[1]), 0, 1e-10);
+    near(6 * (s.pumpAngles[1] - PUMP.phases[1]) + 12 * (s.pumpAngles[2] - PUMP.phases[2]), 0, 1e-10);
+    near(24 * (s.sunAngle - s.carrierAngle) + 72 * (s.ringAngle - s.carrierAngle), 0, 1e-9);
+  }
+  near(Math.hypot(PUMP.centres[0][0] - PUMP.centres[1][0], PUMP.centres[0][1] - PUMP.centres[1][1]), PUMP.radii[0] + PUMP.radii[1]);
+  near(Math.hypot(PUMP.centres[1][0] - PUMP.centres[2][0], PUMP.centres[1][1] - PUMP.centres[2][1]), PUMP.radii[1] + PUMP.radii[2]);
+  assert.notEqual(pose(.21, 0).selectorForkX, pose(.48, 0).selectorForkX);
+  assert.notEqual(pose(.21, 0).selectorForkX, pose(.21, 1).selectorForkX);
+  near(pose(0, .35).pumpAngles[0], PUMP.phases[0], 1e-12);
+  near(pose(1, .35).pumpAngles[0], PUMP.phases[0], 1e-12);
+});
+
 test('actual rendered gear centres and tooth phases agree, and pins engage both real carriers', () => using(m => {
   for (const sleeve of [0, 1]) for (let k = 0; k < 96; k++) {
     const s = pose(k / 96, sleeve); m.update(s, { explode: 0, quality: 'balanced' });
@@ -188,11 +206,78 @@ test('submitted vertices stay grounded inside the 2.3 m envelope in both qualiti
   }
 }));
 
+test('motion gate: nine non-commensurate phases move >=55% of parts including every named subsystem', t => using(m => {
+  const PHASES = [0, .137, .271, .389, .503, .617, .743, .861, .947];
+  assert.equal(new Set(PHASES).size, 9);
+  const snapshots = PHASES.map(phase => {
+    m.update(pose(phase, .35));
+    const map = new Map();
+    for (const mesh of m.pickables) for (let i = 0; i < mesh.count; i++) {
+      const id = mesh.userData.instanceParts[i];
+      if (!map.has(id)) map.set(id, []);
+      map.get(id).push(...mesh.instanceMatrix.array.slice(i * 16, i * 16 + 16));
+    }
+    return map;
+  });
+  const ids = [...snapshots[0].keys()];
+  const movingIds = new Set(), movingInstances = new Set();
+  for (const id of ids) {
+    const base = snapshots[0].get(id), total = base.length / 16;
+    for (let i = 0; i < total; i++) {
+      let moved = false;
+      for (let s = 1; s < snapshots.length && !moved; s++) {
+        const current = snapshots[s].get(id);
+        for (let k = 0; k < 16; k++) if (Math.abs(base[i * 16 + k] - current[i * 16 + k]) > 1e-7) { moved = true; break; }
+      }
+      if (moved) { movingIds.add(id); movingInstances.add(`${id}#${i}`); }
+    }
+  }
+  const thresholdIds = Math.ceil(m.parts.length * .55), thresholdInstances = 900;
+  assert.ok(movingIds.size >= thresholdIds, `${movingIds.size}/${m.parts.length} moving parts must reach ${thresholdIds}`);
+  assert.ok(movingInstances.size >= thresholdInstances, `${movingInstances.size} moving instances must reach ${thresholdInstances}`);
+  t.diagnostic(`motion: ${movingIds.size}/${m.parts.length} part ids, ${movingInstances.size}/${m.stats.instances} instances`);
+  const moving = id => movingIds.has(id);
+  for (const id of ['gear.planet.0', 'gear.planet.1', 'gear.planet.2']) assert.ok(moving(id), `${id} must move`);
+  for (const id of ['carrier.front-hub', 'carrier.rear-hub', 'carrier.front.0', 'carrier.rear.2']) assert.ok(moving(id), `${id} must move`);
+  assert.ok(moving('gear.sun'));
+  for (const id of ['carrier.needle.0.0', 'ring.roller.0', 'bearing.input.needle.0', 'bearing.output.needle.7', 'planet.needle.cage.0']) assert.ok(moving(id), `${id} must move`);
+  for (const id of ['pump.drive', 'pump.idler', 'pump.gear', 'pump.rotor', 'pump.shaft']) assert.ok(moving(id), `${id} must move`);
+  for (const id of ['selector.shaft', 'selector.fork', 'selector.lever', 'selector.pin', 'selector.detent', 'selector.journal']) assert.ok(moving(id), `${id} must move`);
+  for (const id of ['output.flange', 'output.flange.bolt.0', 'planet.pin.0', 'planet.pin.nut.0']) assert.ok(moving(id), `${id} must move`);
+  const rollerIds = [...movingIds].filter(id => /^(carrier\.needle|ring\.roller|bearing\..*\.needle|planet\.needle)/.test(id));
+  assert.ok(rollerIds.length >= 50, `only ${rollerIds.length} moving roller part ids`);
+  assert.ok([...movingIds].filter(id => id.startsWith('carrier.')).length >= 30);
+  for (const id of ['ring.sector.0', 'cage.station.0', 'output.fork', 'pump.cover', 'fixture.foot.1', 'bearing.input.races']) assert.ok(!moving(id), `${id} must stay fixed`);
+  // Negative control: identical nine snapshots must report zero motion and fail.
+  const frozen = Array.from({ length: 9 }, () => new Map([...snapshots[0]].map(([id, values]) => [id, [...values]])));
+  let frozenIds = 0;
+  for (const id of ids) {
+    const base = frozen[0].get(id), total = base.length / 16;
+    for (let i = 0; i < total; i++) if (frozen.some(map => map.get(id).slice(i * 16, i * 16 + 16).some((v, k) => Math.abs(v - base[i * 16 + k]) > 1e-7))) frozenIds++;
+  }
+  assert.equal(frozenIds, 0); assert.ok(frozenIds < thresholdIds);
+}));
+
+test('rendered pump, selector and output flange follow the exact auxiliary schedules', () => using(m => {
+  for (const phase of [0, .17, .42, .78]) {
+    const s = pose(phase, .6); m.update(s);
+    near(m.group.getObjectByName('pump.drive').rotation.z, s.pumpAngles[0], 1e-9);
+    near(m.group.getObjectByName('pump.idler').rotation.z, s.pumpAngles[1], 1e-9);
+    near(m.group.getObjectByName('pump.gear').rotation.z, s.pumpAngles[2], 1e-9);
+    near(m.group.getObjectByName('selector.shaft').rotation.x, s.selectorAngle, 1e-9);
+    near(m.group.getObjectByName('selector.fork').position.x, -.10 + s.selectorForkX, 1e-9);
+    const flange = m.group.getObjectByName('output.flange');
+    assert.equal(flange.parent.name, 'shaft.output'); near(flange.parent.rotation.z, s.carrierAngle, 1e-9);
+    near(m.group.getObjectByName('output.sleeve').rotation.z, s.carrierAngle, 1e-9);
+  }
+}));
+
 test('metadata, actual stats, rendering modes, selection and exact explosion reversal', t => using(m => {
   const ids = new Set(m.parts.map(p => p.id)), names = new Set(m.parts.map(p => p.name));
   assert.equal(ids.size, m.parts.length); assert.equal(names.size, m.parts.length);
-  assert.ok(m.parts.length >= 90 && m.parts.length <= 200);
+  assert.ok(m.parts.length >= 150 && m.parts.length <= 200);
   for (const p of m.parts) for (const k of ['id', 'name', 'system', 'function', 'how', 'material', 'unit', 'detail']) assert.ok(typeof p[k] === 'string' && p[k].length);
+  let lowInstances = 0;
   for (const quality of ['low', 'balanced']) for (const mode of ['solid', 'xray', 'cutaway']) {
     m.update(pose(.23), { quality, mode, explode: 0 });
     const seen = new Set(), counts = { instances: 0, triangles: 0, drawCalls: 0, selectableParts: m.parts.length };
@@ -205,10 +290,12 @@ test('metadata, actual stats, rendering modes, selection and exact explosion rev
       assert.equal(mesh.material.transparent, mode === 'xray' && shell); near(mesh.material.opacity, mode === 'xray' && shell ? .13 : 1);
     }
     assert.deepEqual(seen, ids); assert.deepEqual(m.stats, counts); assert.ok(counts.drawCalls <= 32);
-    assert.ok(counts.triangles <= (quality === 'low' ? 80000 : 135000));
-    if (quality === 'balanced') assert.ok(counts.instances >= 1000 && counts.instances <= 2200);
+    assert.ok(counts.triangles <= 200000);
+    if (quality === 'balanced') assert.ok(counts.instances >= 1700 && counts.instances <= 2200 && counts.triangles >= 85000 && counts.triangles <= 125000);
+    else { assert.ok(counts.triangles <= 80000); lowInstances = counts.instances; }
     if (mode === 'solid') t.diagnostic(`${quality}: ${JSON.stringify(counts)}`);
   }
+  assert.ok(lowInstances > 0);
   const state = freeze(sample(1.23)); m.update(state, { quality: 'balanced', mode: 'solid', explode: 0, selectedId: null }); const a = snapshot(m);
   m.update(pose(.71), { mode: 'xray', explode: 1 }); assert.notDeepEqual(snapshot(m), a);
   for (const explode of [.5, 1, .2, 0]) m.update(state, { mode: 'solid', explode }); assert.deepEqual(snapshot(m), a);

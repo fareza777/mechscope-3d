@@ -27,6 +27,7 @@ import { descriptor as observatory } from './mechanisms/observatory/index.js';
 import { descriptor as piano } from './mechanisms/piano/index.js';
 import { descriptor as robotCell } from './mechanisms/robot-cell/index.js';
 import { descriptor as dragon } from './mechanisms/dragon/index.js';
+import { descriptor as horse } from './mechanisms/horse/index.js';
 
 export const MECHANISMS = Object.freeze([
   {
@@ -79,4 +80,5 @@ export const MECHANISMS = Object.freeze([
   piano,
   robotCell,
   dragon,
+  horse,
 ]);

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { descriptor } from '../src/mechanisms/tourbillon/index.js';
 import { createModel } from '../src/mechanisms/tourbillon/model.js';
-import { D, TAU, DEFAULT_INPUTS, GEAR_PHASES, CAGE_PHASE, SPRING_LENGTHS, cycleHz, inputsOf, sample, poseAt } from '../src/mechanisms/tourbillon/kin.js';
+import { D, TAU, DEFAULT_INPUTS, GEAR_PHASES, CAGE_PHASE, EXTENDED_PHASES, SPRING_LENGTHS, cycleHz, inputsOf, sample, poseAt } from '../src/mechanisms/tourbillon/kin.js';
 
 const near = (a, b, e = 1e-9) => assert.ok(Math.abs(a - b) <= e, `${a} != ${b}`);
 const distance = (a, b) => Math.hypot(...a.map((v, i) => v - b[i]));
@@ -92,6 +92,11 @@ test('integer turns, exact tooth ratios, rigid spring links and alternating pres
     near((state.gearAngles[0] - GEAR_PHASES[0]) * 60 + (state.gearAngles[1] - GEAR_PHASES[1]) * 40, 0, 1e-10);
     near((state.gearAngles[1] - GEAR_PHASES[1]) * 40 + (state.gearAngles[2] - GEAR_PHASES[2]) * 30, 0, 1e-10);
     near((state.gearAngles[2] - GEAR_PHASES[2]) * 15 + (state.cageAngle - CAGE_PHASE) * 60, 0, 1e-10);
+    near((state.extendedAngles[0] - EXTENDED_PHASES[0]) * 10 + (state.gearAngles[2] - GEAR_PHASES[2]) * 30, 0, 1e-10);
+    near((state.extendedAngles[1] - EXTENDED_PHASES[1]) * 30 + (state.extendedAngles[2] - EXTENDED_PHASES[2]) * 6, 0, 1e-10);
+    near(state.extendedAngles[1], state.extendedAngles[0]);
+    near(state.secondsAngle, state.extendedAngles[2]);
+    near(state.fanAngle, 3 * state.escapeAngle);
     near(state.minuteAngle, state.hourAngle * 12); assert.ok(Math.abs(state.balanceAngle) <= amplitude * Math.PI / 180 + 1e-12); assert.ok(Math.abs(state.forkAngle) <= .130000001);
     SPRING_LENGTHS.forEach((length, i) => near(distance(state.springPoints[i], state.springPoints[i + 1]), length, 1e-12));
     assert.ok(Object.values(state.metrics).slice(0, 3).every(Number.isFinite));
@@ -112,21 +117,26 @@ test('sampler is pure, finite and periodic for every moving assembly, including 
   for (const cadence of [.025, .15]) for (const amplitude of [15, 42]) for (const t of [-991, -1.23, 0, .75, 19, 100000]) {
     const input = Object.freeze({ cadence, amplitude }), a = sample(t, input), b = sample(t + 1 / cycleHz(input), input);
     finite(a); assert.ok(a.phase >= 0 && a.phase < 1); sample(400, {}); assert.deepEqual(sample(t, input), a);
-    for (const key of ['cageAngle', 'escapeAngle', 'minuteAngle', 'hourAngle']) near(angularDifference(a[key], b[key]), 0, 2e-8);
+    for (const key of ['cageAngle', 'escapeAngle', 'minuteAngle', 'hourAngle', 'secondsAngle', 'fanAngle']) near(angularDifference(a[key], b[key]), 0, 2e-8);
     near(a.balanceAngle, b.balanceAngle, 2e-8); near(a.forkAngle, b.forkAngle, 2e-8);
+    near(a.clickAngle, b.clickAngle, 2e-8); near(a.regulatorAngle, b.regulatorAngle, 2e-8);
     a.gearAngles.forEach((v, i) => near(angularDifference(v, b.gearAngles[i]), 0, 2e-8));
+    a.extendedAngles.forEach((v, i) => near(angularDifference(v, b.extendedAngles[i]), 0, 2e-8));
     a.springPoints.forEach((v, i) => near(distance(v, b.springPoints[i]), 0, 2e-8));
   }
   for (const t of [NaN, Infinity, -Infinity, Number.MAX_VALUE]) for (const input of [null, {}, { cadence: NaN, amplitude: Infinity }, { cadence: -10, amplitude: 999 }]) finite(sample(t, input));
   assert.deepEqual(inputsOf({ cadence: -10, amplitude: 999 }), { cadence: .025, amplitude: 42 });
-  for (const turns of [...D.turns, D.cageTurns, 12, 1]) assert.ok(Number.isInteger(turns));
+  for (const turns of [...D.turns, ...Object.values(D.extended).map(g => g.turns), D.cageTurns, 12, 1]) assert.ok(Number.isInteger(turns));
 });
 
 test('actual tooth centers establish pitch spacing, mesh phasing and exact rendered gear ratios', () => withModel(model => {
   const observe = angle => {
     model.update(poseAt(angle)); const all = primitives(model);
     return [...[0, 1, 2].map(i => [`train.gear.${i}`, D.teeth[i], D.radii[i], D.gearCenters[i]]),
-      ['train.compound', 15, .075, [D.gearCenters[2][0], D.gearCenters[2][1], -.205]], ['cage.gear', 60, .30, [0, D.center[1], -.205]]].map(([id, teeth, radius, center]) => {
+      ['train.compound', 15, .075, [D.gearCenters[2][0], D.gearCenters[2][1], -.205]], ['cage.gear', 60, .30, [0, D.center[1], -.205]],
+      ['train4.pinion', D.extended.pinion.teeth, D.extended.pinion.radius, [D.extended.pinion.center[0], D.extended.pinion.center[1], D.extended.pinion.z]],
+      ['train4.transfer', D.extended.transfer.teeth, D.extended.transfer.radius, [D.extended.transfer.center[0], D.extended.transfer.center[1], D.extended.transfer.z]],
+      ['seconds.pinion', D.extended.seconds.teeth, D.extended.seconds.radius, [D.extended.seconds.center[0], D.extended.seconds.center[1], D.extended.seconds.z]]].map(([id, teeth, radius, center]) => {
       const boxes = all.filter(p => p.id === id && p.type === 'BoxGeometry'); assert.equal(boxes.length, teeth);
       const root = model.group.getObjectByName(id), inverse = root.matrixWorld.clone().invert();
       boxes.forEach(p => { const local = p.center.clone().applyMatrix4(inverse); near(Math.hypot(local.x, local.y), radius, 2e-7); near(p.center.z, center[2], 2e-7); });
@@ -135,11 +145,16 @@ test('actual tooth centers establish pitch spacing, mesh phasing and exact rende
   };
   const angle = .103, delta = 1e-4, a = observe(angle), b = observe(angle + delta);
   const velocities = a.map((v, i) => angularDifference(b[i], v) / delta);
-  [24, -36, 48, 48, -12].forEach((turns, i) => near(velocities[i], turns, .008));
+  [24, -36, 48, 48, -12, -144, -144, 720].forEach((turns, i) => near(velocities[i], turns, i === 7 ? .02 : .008));
   near(velocities[0] * 60 + velocities[1] * 40, 0, .4); near(velocities[3] * 15 + velocities[4] * 60, 0, .4);
+  near(velocities[2] * 30 + velocities[5] * 10, 0, .4); near(velocities[6] * 30 + velocities[7] * 6, 0, .4);
   near(distance(D.gearCenters[0], D.gearCenters[1]), D.radii[0] + D.radii[1]);
   near(distance(D.gearCenters[1], D.gearCenters[2]), D.radii[1] + D.radii[2]);
   near(Math.hypot(D.gearCenters[2][0], D.gearCenters[2][1] - D.center[1]), .375);
+  near(distance(D.gearCenters[2], D.extended.pinion.center), D.extended.pinion.radius + D.radii[2]);
+  near(Math.hypot(D.extended.pinion.center[0] - D.extended.seconds.center[0], D.extended.pinion.center[1] - D.extended.seconds.center[1]), D.extended.transfer.radius + D.extended.seconds.radius);
+  near((poseAt(TAU).extendedAngles[2] - poseAt(0).extendedAngles[2]) / TAU, 720, 1e-10);
+  near((poseAt(TAU).extendedAngles[0] - poseAt(0).extendedAngles[0]) / TAU, -144, 1e-10);
   const contact = (thetaA, thetaB, na, nb, from, to) => {
     const line = Math.atan2(to[1] - from[1], to[0] - from[0]);
     near(angularDifference(na * (thetaA - line) + nb * (thetaB - line - Math.PI), Math.PI), 0, 2e-4);
@@ -147,7 +162,8 @@ test('actual tooth centers establish pitch spacing, mesh phasing and exact rende
   contact(a[0], a[1], 60, 40, D.gearCenters[0], D.gearCenters[1]);
   contact(a[1], a[2], 40, 30, D.gearCenters[1], D.gearCenters[2]);
   contact(a[3], a[4], 15, 60, D.gearCenters[2], D.center);
-}));
+  contact(a[2], a[5], 30, 10, D.gearCenters[2], D.extended.pinion.center);
+  contact(a[6], a[7], 30, 6, D.extended.transfer.center, D.extended.seconds.center);}));
 
 test('rendered spring endpoints, oscillator pivot and escapement follow their actual cage frame', () => withModel(model => {
   for (const amplitude of [15, 42]) for (let n = 0; n < 24; n++) {
@@ -204,7 +220,7 @@ test('buffer-derived swept annuli clear cage columns and actual fork solids at s
 
 test('rich assembly metadata survives both qualities and real buffer counts meet the budgets', t => withModel(model => {
   const ids = new Set(model.parts.map(p => p.id)); assert.equal(ids.size, model.parts.length); assert.equal(new Set(model.parts.map(p => p.name)).size, ids.size);
-  assert.ok(ids.size >= 100 && ids.size <= 200); assert.ok(new Set(model.parts.map(p => p.system)).size >= 12);
+  assert.ok(ids.size >= 170 && ids.size <= 200); assert.ok(new Set(model.parts.map(p => p.system)).size >= 12);
   for (const p of model.parts) for (const key of ['id', 'name', 'system', 'function', 'how', 'material', 'unit', 'detail']) assert.ok(typeof p[key] === 'string' && p[key].length > 2);
   let full;
   for (const quality of ['balanced', 'low']) {
@@ -215,9 +231,64 @@ test('rich assembly metadata survives both qualities and real buffer counts meet
     }
     assert.equal(used.size, ids.size); assert.equal(model.stats.triangles, triangles); assert.equal(model.stats.instances, instances); assert.equal(model.stats.drawCalls, draws); assert.equal(model.stats.selectableParts, ids.size);
     t.diagnostic(`${quality}: ${ids.size} parts, ${instances} instances, ${triangles} triangles, ${draws} batches`);
-    assert.ok(draws <= 32 && instances <= 2200 && triangles <= 135000);
-    if (quality === 'balanced') { full = instances; assert.ok(instances >= 1000 && triangles >= 70000); } else { assert.ok(instances < full && triangles <= 80000); }
+    assert.ok(draws <= 32 && triangles <= 200000);
+    if (quality === 'balanced') { full = instances; assert.ok(instances >= 1900 && instances <= 2300 && triangles >= 85000 && triangles <= 125000); } else { assert.ok(instances < full && triangles <= 80000); }
   }
+}));
+
+test('motion gate: nine non-commensurate phases move >=60% of parts and named subsystems', t => withModel(model => {
+  const PHASES = [0, .137, .271, .389, .503, .617, .743, .861, .947];
+  assert.equal(new Set(PHASES).size, 9);
+  const snapshots = PHASES.map(phase => {
+    model.update(poseAt(phase * TAU));
+    const map = new Map();
+    for (const mesh of model.pickables) for (let i = 0; i < mesh.count; i++) {
+      const id = mesh.userData.instanceParts[i];
+      if (!map.has(id)) map.set(id, []);
+      map.get(id).push(...mesh.instanceMatrix.array.slice(i * 16, i * 16 + 16));
+    }
+    return map;
+  });
+  const counts = [...snapshots[0].values()].map(v => v.length / 16);
+  assert.ok(counts.every(c => c > 0));
+  const ids = [...snapshots[0].keys()];
+  const movingIds = new Set(), movingInstances = new Set();
+  for (const id of ids) {
+    const base = snapshots[0].get(id), total = base.length / 16;
+    for (let i = 0; i < total; i++) {
+      let moved = false;
+      for (let s = 1; s < snapshots.length && !moved; s++) {
+        const current = snapshots[s].get(id);
+        for (let k = 0; k < 16; k++) if (Math.abs(base[i * 16 + k] - current[i * 16 + k]) > 1e-7) { moved = true; break; }
+      }
+      if (moved) { movingIds.add(id); movingInstances.add(`${id}#${i}`); }
+    }
+  }
+  const thresholdIds = Math.ceil(model.parts.length * .60), thresholdInstances = 1300;
+  assert.ok(movingIds.size >= thresholdIds, `${movingIds.size}/${model.parts.length} moving parts must reach ${thresholdIds}`);
+  assert.ok(movingInstances.size >= thresholdInstances, `${movingInstances.size} moving instances must reach ${thresholdInstances}`);
+  t.diagnostic(`motion: ${movingIds.size}/${model.parts.length} part ids, ${movingInstances.size}/${model.stats.instances} instances`);
+  const moving = id => movingIds.has(id);
+  for (const id of ['train.gear.0', 'train.gear.1', 'train.gear.2', 'train4.pinion', 'train4.transfer', 'seconds.pinion', 'barrel.ratchet', 'barrel.click']) assert.ok(moving(id), `${id} must move`);
+  for (const id of ['cage', 'cage.gear', 'cage.column.0', 'cage.roller.0', 'cage.jewel.0']) assert.ok(moving(id), `${id} must move`);
+  for (const id of ['balance', 'balance.spoke.0', 'balance.weight.0', 'hairspring.0', 'balance.index']) assert.ok(moving(id), `${id} must move`);
+  for (const id of ['escapement.wheel', 'escapement.fork', 'escapement.pallet.-1', 'escapement.fan', 'escapement.pinion']) assert.ok(moving(id), `${id} must move`);
+  for (const id of ['hands.hour', 'hands.minute', 'seconds.hand']) assert.ok(moving(id), `${id} must move`);
+  for (const id of ['stand.foot', 'frame.backring', 'hands.bridge', 'seconds.subdial']) assert.ok(!moving(id), `${id} must stay fixed`);
+  // Negative control: the same gate over nine identical poses must collapse to
+  // zero motion and fail both thresholds, proving it can reject a frozen model.
+  const frozen = Array.from({ length: 9 }, () => {
+    const map = new Map();
+    for (const [id, values] of snapshots[0]) map.set(id, [...values]);
+    return map;
+  });
+  let frozenIds = 0, frozenInstances = 0;
+  for (const id of ids) {
+    const base = frozen[0].get(id), total = base.length / 16;
+    for (let i = 0; i < total; i++) if (frozen.some(m => m.get(id).slice(i * 16, i * 16 + 16).some((v, k) => Math.abs(v - base[i * 16 + k]) > 1e-7))) { frozenIds++; frozenInstances++; }
+  }
+  assert.equal(frozenIds, 0); assert.equal(frozenInstances, 0);
+  assert.ok(frozenIds < thresholdIds && frozenInstances < thresholdInstances);
 }));
 
 test('complete rendered movement stays grounded, vertical, open and compact at every phase', () => withModel(model => {

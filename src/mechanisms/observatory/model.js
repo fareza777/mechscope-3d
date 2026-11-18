@@ -18,6 +18,7 @@ export function createModel() {
   };
   const ball = (node, material, p, radius, detail = false) => add(node, 'sphere', material, p, [radius, radius, radius], [0, 0, 0], detail);
   const domePoint = (azimuth, phi, radius = D.domeRadius) => [radius * Math.cos(phi) * Math.cos(azimuth), radius * Math.sin(phi), radius * Math.cos(phi) * Math.sin(azimuth)];
+  const domeEuler = (azimuth, phi) => [-phi, Math.PI / 2 - azimuth, 0, 'YXZ'];
 
   // ---------------------------------------------------------------- building
   const foundation = part('building.foundation', 'Circular foundation and damp-proof course', 'Building',
@@ -64,6 +65,35 @@ export function createModel() {
   add(door, 'cylinder', 'brass', [-.28, .62, 1.27], [.022, .08, .022], [Math.PI / 2, 0, 0]);
   plate(door, 'brass', [-.28, .54, 1.27], [.06, .02, .05]);
 
+  const serviceFrame = part('building.service-frame', 'North service door frame and threshold', 'Building',
+    'Frames the secondary weather door in the north wall bay.',
+    'A dark painted surround, a brass threshold strip and two hinge brackets sit between two wall piers.', undefined, [0, .02, 0], 'Dark surround and brass threshold');
+  const serviceAz = 270 * Math.PI / 180;
+  const serviceR = 1.205;
+  plate(serviceFrame, 'dark', [serviceR * Math.cos(serviceAz), .62, serviceR * Math.sin(serviceAz)], [.72, 1.06, .06], [0, Math.PI / 2 - serviceAz, 0]);
+  plate(serviceFrame, 'brass', [serviceR * Math.cos(serviceAz), .11, serviceR * Math.sin(serviceAz)], [.78, .03, .09], [0, Math.PI / 2 - serviceAz, 0]);
+  for (const y of [.30, .92]) add(serviceFrame, 'cylinder', 'brass', [serviceR * Math.cos(serviceAz) - Math.sin(serviceAz) * .36, y, serviceR * Math.sin(serviceAz) + Math.cos(serviceAz) * .36], [.016, .10, .016], [0, 0, 0], true);
+
+  const serviceDoor = part('building.service-door', 'Hinged north service door', 'Building',
+    'Opens independently of the main entry for instrument traffic.',
+    'A pale insulated leaf, four dark stiffeners, a brass pull and a glazed inspection pane swing on two brass hinges.', undefined, [0, .02, 0], 'Pale leaf, dark stiffeners and brass pull');
+  const serviceTangent = [-Math.sin(serviceAz), 0, Math.cos(serviceAz)];
+  serviceDoor.position.set(serviceR * Math.cos(serviceAz) + serviceTangent[0] * .36, .62, serviceR * Math.sin(serviceAz) + serviceTangent[2] * .36);
+  serviceDoor.rotation.y = Math.PI / 2 - serviceAz;
+  plate(serviceDoor, 'shell', [.36, 0, 0], [.70, .94, .045]);
+  for (let k = 0; k < 4; k++) plate(serviceDoor, 'dark', [.36, -.34 + k * .22, -.025], [.60, .025, .012], [0, 0, 0], true);
+  add(serviceDoor, 'cylinder', 'brass', [.60, -.04, .028], [.018, .06, .018], [Math.PI / 2, 0, 0]);
+  plate(serviceDoor, 'lens', [.22, .20, .026], [.22, .28, .012]);
+  for (const y of [-.36, .36]) add(serviceDoor, 'cylinder', 'brass', [.03, y, 0], [.022, .07, .022]);
+
+  const floorHatch = part('building.floor-hatch', 'Floor service hatch and lifting eye', 'Building',
+    'Gives access to the pier foundation and cable trench.',
+    'A dark floor plate, a brass lifting eye and four countersunk fasteners sit beside the azimuth track.', undefined, [0, 0, 0], 'Dark floor plate and brass lifting eye');
+  floorHatch.position.set(-.46, .152, .44);
+  plate(floorHatch, 'dark', [0, 0, 0], [.34, .015, .28]);
+  add(floorHatch, 'ring', 'brass', [0, .02, 0], [.055, .055, .055], [Math.PI / 2, 0, 0]);
+  for (const [x, z] of [[-.13, -.10], [.13, -.10], [-.13, .10], [.13, .10]]) add(floorHatch, 'bolt', 'titanium', [x, .01, z], [.008, .012, .008], [0, 0, 0], true);
+
   const stairs = part('building.stairs', 'Three-tread entry stair', 'Building',
     'Provides a visible approach to the door.',
     'Three stone treads, two dark stringers and a brass handrail step up to the observing floor.', undefined, [0, 0, 0], 'Stone treads, dark stringers and brass handrail');
@@ -74,14 +104,39 @@ export function createModel() {
   for (const side of [-1, 1]) rod(stairs, 'dark', [side * .42, .10, 1.34], [side * .42, .30, 1.82], .018);
   rod(stairs, 'brass', [-.46, .62, 1.36], [-.46, .62, 1.84], .014);
 
+  const railing = part('building.railing', 'Entry stair railing and newel caps', 'Building',
+    'Guides visitors up the stair and around the door landing.',
+    'Six dark balusters, a continuous brass handrail, four pale infill rails and eight domed newel caps surround the treads.', undefined, [0, .01, 0], 'Dark balusters, brass handrail and pale infill');
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 3; i++) rod(railing, 'dark', [side * .52, .18 + i * .05, 1.36 + i * .20], [side * .52, .62 + i * .05, 1.36 + i * .20], .012);
+    rod(railing, 'brass', [side * .52, .64, 1.34], [side * .52, .76, 1.84], .014);
+    for (let i = 0; i < 3; i++) add(railing, 'sphere', 'brass', [side * .52, .64 + i * .05, 1.36 + i * .20], [.016, .016, .016], [0, 0, 0], true);
+    rod(railing, 'shell', [side * .52, .34, 1.40], [side * .52, .42, 1.80], .010, true);
+  }
+
+  const cableTray = part('building.cable-tray', 'Wall cable tray and conduit drops', 'Building',
+    'Routes power, encoder and network cables from the pier to the wall services.',
+    'A dark perforated tray, three copper conduits, six brass saddle clamps and two junction boxes climb the west wall.', undefined, [0, .02, 0], 'Dark tray, copper conduits and brass saddles');
+  rod(cableTray, 'dark', [-1.02, .22, -.74], [-1.02, 1.18, -.74], .026);
+  for (const dz of [-.05, 0, .05]) rod(cableTray, 'copper', [-1.04, .24, -.74 + dz], [-1.04, 1.16, -.74 + dz], .005, true);
+  for (let i = 0; i < 6; i++) add(cableTray, 'ring', 'brass', [-1.02, .30 + i * .15, -.74], [.020, .020, .020], [0, 0, Math.PI / 2], true);
+  plate(cableTray, 'dark', [-1.02, .62, -.70], [.12, .18, .08]);
+
+  const wallBracket = part('building.instrument-bracket', 'Wall instrument bracket and shelf', 'Building',
+    'Supports the barometer and the spare eyepiece case clear of the floor.',
+    'Two dark cantilever arms, a pale shelf, a brass edge rail and four braces bolt to the west wall pier.', undefined, [0, .02, 0], 'Dark cantilevers, pale shelf and brass rail');
+  for (const z of [-.22, .12]) rod(wallBracket, 'dark', [-1.12, .86, z], [-.82, .86, z], .014);
+  plate(wallBracket, 'shell', [-.97, .89, -.05], [.34, .025, .44]);
+  rod(wallBracket, 'brass', [-.82, .93, -.24], [-.82, .93, .14], .008);
+  for (const z of [-.22, .12]) rod(wallBracket, 'titanium', [-1.14, .70, z], [-.90, .86, z], .008, true);
+
   const rail = part('building.rail', 'Dome track and roller ring', 'Dome support',
-    'Carries the rotating dome on twelve visible rollers.',
-    'A fixed brass track, twelve rubber rollers, six dark brackets and a drive pinion sit above the wall ring.', undefined, [0, .03, 0], 'Brass track, rubber rollers and dark brackets');
+    'Carries the rotating dome on eight visible rollers.',
+    'A fixed brass track, eight rubber rollers in separate carriages, twelve dark brackets and a drive pinion sit above the wall ring.', undefined, [0, .03, 0], 'Brass track, rubber rollers and dark brackets');
   add(rail, 'ring', 'brass', [0, 1.24, 0], [1.235, 1.235, 1.235], [Math.PI / 2, 0, 0]);
   add(rail, 'ring', 'titanium', [0, 1.21, 0], [1.15, 1.15, 1.15], [Math.PI / 2, 0, 0]);
   for (let i = 0; i < 12; i++) {
     const a = i * TAU / 12;
-    add(rail, 'cylinder', 'rubber', [1.18 * Math.cos(a), 1.245, 1.18 * Math.sin(a)], [.028, .07, .028], [0, 0, Math.PI / 2]);
     add(rail, 'box', 'dark', [1.14 * Math.cos(a), 1.19, 1.14 * Math.sin(a)], [.08, .06, .08], [0, -a, 0], true);
   }
   const pinion = part('dome.pinion', 'Dome drive pinion', 'Dome drive',
@@ -90,6 +145,22 @@ export function createModel() {
   pinion.position.set(.94, 1.26, .78);
   kit.gear(pinion, .11, 14, .045, 'brass');
   mirrors.push({ node: pinion, kind: 'pinion' });
+
+  const rollers = [];
+  for (let i = 0; i < D.rollerCount; i++) {
+    const a = (i + .5) * TAU / D.rollerCount, label = String(i + 1).padStart(2, '0');
+    const roller = part(`dome.roller.${label}`, `Dome roller ${label} of eight`, 'Dome support',
+      'Rolls on the brass track as the dome scans, taking the dome weight.',
+      'A rubber tire, a brass axle, two pale side discs, a brass bearing ring and two bolts form one turning roller carriage.', undefined, [0, .04, 0], 'Rubber tire, brass axle and bearing ring');
+    roller.position.set(1.18 * Math.cos(a), 1.245, 1.18 * Math.sin(a));
+    roller.rotation.y = -a;
+    add(roller, 'cylinder', 'rubber', [0, 0, 0], [D.rollerRadius, .075, D.rollerRadius], [Math.PI / 2, 0, 0]);
+    add(roller, 'cylinder', 'brass', [0, 0, 0], [.011, .10, .011], [Math.PI / 2, 0, 0]);
+    for (const z of [-.036, .036]) add(roller, 'cylinder', 'shell', [0, 0, z], [.031, .006, .031], [Math.PI / 2, 0, 0], true);
+    add(roller, 'ring', 'brass', [0, 0, .036], [.030, .030, .030], [0, 0, 0], true);
+    for (const z of [-.032, .032]) add(roller, 'bolt', 'titanium', [0, 0, z], [.008, .010, .008], [Math.PI / 2, 0, 0], true);
+    rollers.push({ node: roller, base: roller.quaternion.clone() });
+  }
 
   // ---------------------------------------------------------------- dome
   const domeGroup = new THREE.Group(); domeGroup.name = 'rotating-dome'; domeGroup.position.y = D.domeBaseY; kit.assemblies.add(domeGroup);
@@ -176,13 +247,98 @@ export function createModel() {
     if (i % 2 === 0) add(domeGear, 'bolt', 'dark', [1.10 * Math.cos(a), .04, 1.10 * Math.sin(a)], [.008, .012, .008], [0, 0, 0], true);
   }
 
+  // Dense panel seams: two battens in each of the twelve mid-bays.
+  for (let i = 0; i < 24; i++) {
+    const band = i < 12 ? 0 : 1, bay = i % 12;
+    const az = (bay + .5) * TAU / 12 + Math.PI / 12;
+    const phi0 = band === 0 ? .08 : .58, phi1 = band === 0 ? .54 : 1.10;
+    const label = String(i + 1).padStart(2, '0');
+    const seam = part(`dome.seam.${label}`, `Dome panel seam batten ${label} of twenty-four`, 'Dome structure',
+      'Covers the panel joint and stiffens the skin between two ribs.',
+      'Six brass-edged segments, two domed rosettes and four countersunk fasteners follow the meridian curve.', domeGroup, [0, .02, 0], 'Brass-edged segments and rosettes');
+    const points = Array.from({ length: 7 }, (_, k) => domePoint(az, phi0 + (phi1 - phi0) * k / 6, D.domeRadius * 1.004));
+    for (let k = 0; k < 6; k++) rod(seam, 'brass', points[k], points[k + 1], .005);
+    for (const k of [0, 6]) add(seam, 'sphere', 'brass', points[k], [.013, .013, .013], [0, 0, 0], true);
+    for (const k of [1, 3, 4, 6]) {
+      const p = points[k];
+      add(seam, 'bolt', 'titanium', [p[0] * 1.008, p[1], p[2] * 1.008], [.006, .010, .006], [Math.PI / 2, 0, 0], true);
+    }
+  }
+
+  // Ventilation bank: ten framed louvers on both flanks of the slit.
+  const ventFrames = part('dome.vent-frames', 'Dome ventilation frames and hinge pins', 'Dome ventilation',
+    'Frames ten louver openings in the dome skin.',
+    'Ten dark shallow frames, ten brass hinge pins and twenty backing pads sit between the meridian ribs.', domeGroup, [0, .02, 0], 'Dark frames and brass hinge pins');
+  const louverAz = [-143.5, -113.5, -83.5, -53.5, -23.5, 23.5, 53.5, 83.5, 113.5, 143.5];
+  const louvers = [];
+  for (const [i, deg] of louverAz.entries()) {
+    const az = deg * Math.PI / 180, phi = .60;
+    const p = domePoint(az, phi, D.domeRadius * .992);
+    const euler = domeEuler(az, phi);
+    plate(ventFrames, 'dark', p, [.20, .28, .015], euler);
+    add(ventFrames, 'cylinder', 'brass', [p[0], p[1], p[2]], [.012, .26, .012], euler, true);
+    const label = String(i + 1).padStart(2, '0');
+    const leaf = part(`dome.louver.${label}`, `Dome vent louver ${label} of ten`, 'Dome ventilation',
+      'Meters cooling airflow through the dome skin during the observing cycle.',
+      'A pale louver blade, three dark weather slats, a brass hinge ring and a folding brass stay sit on the frame.', domeGroup, [0, .04, 0], 'Pale blade, dark slats and brass hinge');
+    leaf.position.set(p[0], p[1], p[2]);
+    leaf.rotation.set(-phi, Math.PI / 2 - az, 0, 'YXZ');
+    plate(leaf, 'shell', [.085, 0, .018], [.17, .24, .018]);
+    for (let k = 0; k < 3; k++) plate(leaf, 'dark', [.085, -.08 + k * .08, .030], [.14, .011, .010], [0, 0, 0], true);
+    add(leaf, 'ring', 'brass', [0, 0, .018], [.026, .026, .026], [0, Math.PI / 2, 0], true);
+    add(leaf, 'cylinder', 'brass', [.165, 0, .026], [.010, .044, .010], [0, 0, 0], true);
+    add(leaf, 'bolt', 'titanium', [.06, 0, .032], [.005, .010, .005], [Math.PI / 2, 0, 0], true);
+    louvers.push({ node: leaf, base: leaf.quaternion.clone(), index: i });
+  }
+
+  const hatchFrame = part('dome.hatch-frame', 'Dome service hatch coaming and seal', 'Dome service',
+    'Frames the maintenance opening beside the lower latitude ring.',
+    'A pale coaming, a dark gasket, two brass hinge lugs and four bolt pads close the hatched bay.', domeGroup, [0, .02, 0], 'Pale coaming and brass lugs');
+  const hatchAz = 202 * Math.PI / 180, hatchPhi = .34;
+  const hatchPoint = domePoint(hatchAz, hatchPhi, D.domeRadius * .995);
+  plate(hatchFrame, 'shell', hatchPoint, [.24, .24, .05], domeEuler(hatchAz, hatchPhi));
+  plate(hatchFrame, 'dark', hatchPoint, [.20, .20, .06], domeEuler(hatchAz, hatchPhi), true);
+  for (const side of [-1, 1]) add(hatchFrame, 'cylinder', 'brass', [hatchPoint[0], hatchPoint[1] + side * .10, hatchPoint[2]], [.014, .06, .014], domeEuler(hatchAz, hatchPhi), true);
+  const serviceHatch = part('dome.service-hatch', 'Dome service hatch leaf and restraint', 'Dome service',
+    'Opens for dome-track inspection without moving the telescope.',
+    'A pale hatch leaf, a dark inner rib, a brass pull and a folding restraint strap swing on two brass hinges.', domeGroup, [0, .04, 0], 'Pale hatch leaf and brass restraint');
+  serviceHatch.position.set(hatchPoint[0], hatchPoint[1], hatchPoint[2]);
+  serviceHatch.rotation.set(-hatchPhi, Math.PI / 2 - hatchAz, 0, 'YXZ');
+  plate(serviceHatch, 'shell', [.11, 0, .035], [.22, .20, .035]);
+  plate(serviceHatch, 'dark', [.11, 0, .012], [.18, .02, .012], [0, 0, 0], true);
+  add(serviceHatch, 'cylinder', 'brass', [.22, 0, .045], [.012, .05, .012]);
+  rod(serviceHatch, 'copper', [.04, .06, .05], [.16, .12, .09], .005, true);
+  const hatchBase = serviceHatch.quaternion.clone();
+
+  const domeCounterweight = part('dome.counterweight', 'Dome counterweight and safety cable', 'Dome drive',
+    'Balances the slit side of the rotating dome and restrains it if the drive slips.',
+    'A dark laminated weight, a brass lifting ring, two clamps and a copper safety cable hang below the track.', domeGroup, [0, .03, 0], 'Dark weight, brass ring and copper cable');
+  domeCounterweight.position.set(-1.02, -.04, .18);
+  for (let i = 0; i < 3; i++) axial(domeCounterweight, 'dark', [0, -.02 - i * .05, 0], .10 - i * .008, .04, 'y');
+  add(domeCounterweight, 'ring', 'brass', [0, .01, 0], [.055, .055, .055], [0, Math.PI / 2, 0]);
+  rod(domeCounterweight, 'copper', [0, -.13, 0], [-.18, .22, .04], .006, true);
+  rod(domeCounterweight, 'titanium', [0, -.13, 0], [-.20, .18, .02], .008, true);
+
   // ---------------------------------------------------------------- telescope
+  const mount = new THREE.Group(); mount.name = 'equatorial-axis'; kit.assemblies.add(mount);
   const pier = part('telescope.pier', 'Concrete pier and isolation collar', 'Telescope mount',
     'Supports the equatorial fork independently of the timber floor.',
     'A dark cylindrical pier, a pale levelling collar and eight brass anchor bolts rise through the floor opening.', undefined, [0, .03, 0], 'Dark pier, pale collar and brass anchors');
   axial(pier, 'dark', [0, .46, 0], .24, .72, 'y');
   axial(pier, 'shell', [0, .86, 0], .35, .09, 'y');
   for (let i = 0; i < 8; i++) add(pier, 'bolt', 'brass', [.27 * Math.cos(i * TAU / 8), .90, .27 * Math.sin(i * TAU / 8)], [.013, .02, .013], [0, 0, 0], true);
+
+  const pierFan = part('telescope.pier-fan', 'Pier electronics cooling fan', 'Telescope drive',
+    'Keeps the drive electronics cool while the telescope tracks.',
+    'Six pale blades, a brass hub, a dark guard ring and a copper motor can spin beside the pier.', undefined, [0, .02, 0], 'Pale blades, brass hub and dark guard');
+  pierFan.position.set(-.28, .42, -.12);
+  for (let i = 0; i < 6; i++) {
+    const a = i * TAU / 6;
+    plate(pierFan, 'titanium', [.045 * Math.cos(a), .045 * Math.sin(a), 0], [.075, .025, .010], [0, 0, -a]);
+  }
+  add(pierFan, 'cylinder', 'brass', [0, 0, 0], [.018, .018, .018], [Math.PI / 2, 0, 0]);
+  add(pierFan, 'ring', 'dark', [0, 0, .005], [.055, .055, .055], [0, 0, 0], true);
+  add(pierFan, 'box', 'dark', [0, 0, -.025], [.13, .13, .02]);
 
   const wedge = part('telescope.wedge', 'Equatorial wedge and latitude sector', 'Telescope mount',
     'Sets the polar axis angle of the fork.',
@@ -193,28 +349,28 @@ export function createModel() {
 
   const forkBase = part('telescope.fork-base', 'Fork base and declination bearing', 'Telescope mount',
     'Carries both fork arms on the polar axis.',
-    'A machined dark turntable, a brass bearing ring and two bolted fork cheeks sit above the wedge.', undefined, [0, .03, 0], 'Dark turntable and brass bearing ring');
+    'A machined dark turntable, a brass bearing ring and two bolted fork cheeks sit above the wedge.', mount, [0, .03, 0], 'Dark turntable and brass bearing ring');
   axial(forkBase, 'dark', [0, 1.04, 0], .30, .09, 'y');
   add(forkBase, 'ring', 'brass', [0, 1.10, 0], [.24, .24, .24], [Math.PI / 2, 0, 0]);
 
   for (const side of [-1, 1]) {
     const arm = part(`telescope.fork.${side < 0 ? 'L' : 'R'}`, `${side < 0 ? 'Left' : 'Right'} fork arm`, 'Telescope mount',
       'Supports one end of the declination shaft.',
-      'A tapered dark plate, a pale outer web and a brass bearing cap reach from the fork base to the shaft.', undefined, [0, .03, 0], 'Tapered plate and brass bearing cap');
+      'A tapered dark plate, a pale outer web and a brass bearing cap reach from the fork base to the shaft.', mount, [0, .03, 0], 'Tapered plate and brass bearing cap');
     for (const z of [-.10, .10]) rod(arm, 'dark', [side * .29, 1.10, z], [side * .29, 1.44, z], .028);
     plate(arm, 'shell', [side * .29, 1.27, 0], [.05, .27, .19], [0, 0, 0]);
     add(arm, 'ring', 'brass', [side * .29, 1.46, 0], [.075, .075, .075], [0, Math.PI / 2, 0]);
   }
   const shaft = part('telescope.dec-shaft', 'Declination shaft and setting circles', 'Telescope mount',
     'Defines the single altitude axis of the tube.',
-    'A continuous titanium shaft, two graduated brass circles and four dark collars pass through both fork bearings.', undefined, [0, .03, 0], 'Titanium shaft and graduated brass circles');
+    'A continuous titanium shaft, two graduated brass circles and four dark collars pass through both fork bearings.', mount, [0, .03, 0], 'Titanium shaft and graduated brass circles');
   axial(shaft, 'titanium', [0, D.pivot[1], 0], .040, .74);
   for (const side of [-1, 1]) add(shaft, 'ring', 'brass', [side * .33, D.pivot[1], 0], [.095, .095, .095], [0, Math.PI / 2, 0]);
   for (const x of [-.20, .20]) add(shaft, 'cylinder', 'dark', [x, D.pivot[1], 0], [.055, .05, .055], [0, 0, Math.PI / 2]);
 
   const tube = part('telescope.tube', 'Open tube truss and three longerons', 'Optical tube',
     'Carries the primary mirror, secondary mirror and focuser on one rigid axis.',
-    'Three titanium longerons, six brass rings and a dark front cell form an open 1,640 mm tube around the light path.', undefined, [0, .04, 0], 'Titanium longerons and brass rings');
+    'Three titanium longerons, six brass rings and a dark front cell form an open 1,640 mm tube around the light path.', mount, [0, .04, 0], 'Titanium longerons and brass rings');
   tube.position.set(0, D.pivot[1], 0);
   for (let i = 0; i < 3; i++) {
     const a = i * TAU / 3;
@@ -271,12 +427,23 @@ export function createModel() {
   add(secondary, 'ring', 'dark', [0, 0, .38], [.085, .085, .085], [0, 0, 0]);
   add(secondary, 'ring', 'brass', [0, 0, .42], [.055, .055, .055], [0, 0, 0]);
 
-  const focuser = part('telescope.focuser', 'Focuser drawtube and eyepiece', 'Optics',
+  const focuser = part('telescope.focuser', 'Focuser body and rack housing', 'Optics',
     'Provides the visual focus and eyepiece interface.',
-    'A dark drawtube, two brass focus knobs and a rubber eyecup project from the side of the tube near the front ring.', tube, [0, .03, 0], 'Dark drawtube and brass knobs');
-  axial(focuser, 'dark', [0, .16, .88], .035, .14, 'z');
+    'A dark focuser body, two brass focus knobs and a rubber eyecup project from the side of the tube near the front ring.', tube, [0, .03, 0], 'Dark focuser body and brass knobs');
+  axial(focuser, 'dark', [0, .16, .88], .048, .14, 'z');
   add(focuser, 'ring', 'brass', [0, .16, .94], [.055, .055, .055], [0, 0, 0]);
   for (const side of [-1, 1]) add(focuser, 'cylinder', 'brass', [side * .07, .13, .84], [.022, .05, .022], [0, 0, Math.PI / 2]);
+
+  const drawtube = part('telescope.drawtube', 'Focuser drawtube, eyepiece and lock screw', 'Optics',
+    'Slides in the focuser to set the visual focal plane.',
+    'A dark travelling drawtube, a brass lock collar, a rubber eyecup and a graduated scale move along the optical axis.', focuser, [0, .03, 0], 'Dark drawtube, brass collar and rubber eyecup');
+  drawtube.position.set(0, .16, .96);
+  axial(drawtube, 'dark', [0, 0, .03], .033, .10, 'z');
+  add(drawtube, 'cylinder', 'brass', [0, 0, .09], [.038, .014, .038], [Math.PI / 2, 0, 0]);
+  add(drawtube, 'cylinder', 'rubber', [0, 0, .11], [.030, .014, .030], [Math.PI / 2, 0, 0]);
+  add(drawtube, 'cylinder', 'lens', [0, 0, .12], [.024, .006, .024], [Math.PI / 2, 0, 0]);
+  plate(drawtube, 'titanium', [.035, .03, .02], [.03, .012, .06], [0, 0, 0], true);
+  const drawtubeBase = drawtube.position.clone();
 
   const finder = part('telescope.finder', 'Finder scope and bracket', 'Optics',
     'Shows a small auxiliary sighting telescope.',
@@ -285,16 +452,51 @@ export function createModel() {
   for (const z of [.16, .48]) add(finder, 'ring', 'brass', [.24, .26, z], [.042, .042, .042], [0, 0, 0]);
   for (const z of [.22, .42]) rod(finder, 'titanium', [.24, .26, z], [.14, .18, z], .008);
 
+  const guider = part('telescope.guider', 'Off-axis guider and pick-off prism', 'Optics',
+    'Samples a star field for the autoguider while the telescope tracks.',
+    'A dark guide body, two brass collars, a teal prism window and a copper signal lead clamp beside the focuser.', tube, [0, .03, 0], 'Dark guide body, brass collars and teal prism');
+  axial(guider, 'dark', [-.19, .12, .72], .040, .19, 'z');
+  for (const z of [.64, .80]) add(guider, 'ring', 'brass', [-.19, .12, z], [.045, .045, .045], [0, 0, 0]);
+  add(guider, 'cylinder', 'lens', [-.19, .12, .82], [.020, .008, .020], [Math.PI / 2, 0, 0]);
+  rod(guider, 'copper', [-.19, .08, .64], [-.10, -.02, .70], .005, true);
+
+  const spectrograph = part('telescope.spectrograph', 'Spectrograph and instrument dewar', 'Optics',
+    'Represents the heavy instrument package carried at the focus.',
+    'A dark body, a pale dewar, three brass instrument rings, a teal window and two copper coolant lines hang below the tube.', tube, [0, .04, 0], 'Dark body, pale dewar and copper coolant lines');
+  plate(spectrograph, 'dark', [0, -.30, .82], [.26, .18, .24]);
+  add(spectrograph, 'cylinder', 'shell', [0, -.30, .95], [.10, .07, .10], [Math.PI / 2, 0, 0]);
+  for (const z of [.70, .82, .94]) add(spectrograph, 'ring', 'brass', [0, -.30, z], [.105, .105, .105], [0, 0, 0]);
+  add(spectrograph, 'cylinder', 'lens', [0, -.30, .99], [.045, .008, .045], [Math.PI / 2, 0, 0]);
+  for (const x of [-.09, .09]) rod(spectrograph, 'copper', [x, -.39, .88], [x * 1.4, -.46, .66], .006, true);
+
+  const guideCamera = part('telescope.guide-camera', 'Autoguider camera and focus motor', 'Optics',
+    'Drives the guider focus and reads the guide star.',
+    'A teal camera body, a brass nosepiece, two pale spacers and a copper encoder lead sit behind the guider.', tube, [0, .03, 0], 'Teal camera, brass nosepiece and copper lead');
+  plate(guideCamera, 'teal', [-.19, .12, .55], [.09, .09, .12]);
+  axial(guideCamera, 'brass', [-.19, .12, .63], .028, .05, 'z');
+  for (const z of [.52, .57]) add(guideCamera, 'cylinder', 'shell', [-.19, .12, z], [.042, .012, .042], [Math.PI / 2, 0, 0], true);
+  rod(guideCamera, 'copper', [-.15, .10, .52], [-.08, .04, .46], .004, true);
+
   const counterweight = part('telescope.counterweight', 'Declination counterweight stack', 'Telescope mount',
     'Balances the tube around the declination axis.',
-    'Three dark discs, two brass spacer rings and a central clamp sit on a short arm behind the fork.', undefined, [0, .03, 0], 'Dark discs and brass spacers');
+    'Three dark discs, two brass spacer rings and a central clamp sit on a short arm behind the fork.', mount, [0, .03, 0], 'Dark discs and brass spacers');
   for (let i = 0; i < 3; i++) axial(counterweight, 'dark', [0, 1.18 - i * .07, -.46], .16 - i * .012, .045, 'y');
   add(counterweight, 'ring', 'brass', [0, 1.22, -.46], [.10, .10, .10], [Math.PI / 2, 0, 0]);
   rod(counterweight, 'titanium', [0, 1.24, -.10], [0, 1.18, -.46], .024);
 
+  const clockWeight = part('telescope.clock-counterweight', 'Clock-drive sliding counterweight', 'Telescope drive',
+    'Trims the torque of the sidereal clock drive as the tube changes altitude.',
+    'A dark sliding block, a brass guide rod, two bearing rings and a clamp screw ride on a short vertical rail.', mount, [0, .03, 0], 'Dark block, brass rod and bearing rings');
+  clockWeight.position.set(.10, 1.28, -.40);
+  rod(clockWeight, 'brass', [0, -.10, 0], [0, .16, 0], .010);
+  axial(clockWeight, 'dark', [0, 0, 0], .055, .05, 'y');
+  for (const y of [-.04, .04]) add(clockWeight, 'ring', 'brass', [0, y, 0], [.030, .030, .030], [Math.PI / 2, 0, 0], true);
+  add(clockWeight, 'bolt', 'titanium', [.055, 0, 0], [.008, .014, .008], [0, 0, Math.PI / 2], true);
+  const clockWeightBase = clockWeight.position.clone();
+
   const driveWheel = part('telescope.drive-wheel', 'Sidereal drive wheel and worm', 'Telescope drive',
     'Shows the slow tracking input on the declination shaft.',
-    'A brass ring, eight titanium spokes and a dark worm block turn on the right fork bearing.', undefined, [0, .03, 0], 'Brass wheel, titanium spokes and dark worm');
+    'A brass ring, eight titanium spokes and a dark worm block turn on the right fork bearing.', mount, [0, .03, 0], 'Brass wheel, titanium spokes and dark worm');
   driveWheel.position.set(D.forkX + .12, D.pivot[1], 0);
   add(driveWheel, 'ring', 'brass', [0, 0, 0], [.12, .12, .12], [0, Math.PI / 2, 0]);
   axial(driveWheel, 'dark', [0, 0, 0], .034, .05);
@@ -304,6 +506,25 @@ export function createModel() {
   }
   add(driveWheel, 'box', 'dark', [-.045, .10, .10], [.07, .06, .08]);
   mirrors.push({ node: driveWheel, kind: 'drive' });
+
+  const secondsWheel = part('telescope.seconds-wheel', 'Sidereal seconds wheel', 'Telescope drive',
+    'Shows the fast seconds train that the clock drive regulates.',
+    'A twenty-tooth brass wheel, a dark hub, a graduated index disc and a pointed brass hand turn on the drive bracket.', mount, [0, .03, 0], 'Brass wheel and graduated index');
+  secondsWheel.position.set(D.forkX + .24, D.pivot[1] + .22, .05);
+  secondsWheel.rotation.z = Math.PI / 2;
+  kit.gear(secondsWheel, .085, 18, .028, 'brass');
+  plate(secondsWheel, 'titanium', [0, .02, .085], [.012, .14, .012], [0, 0, 0], true);
+  add(secondsWheel, 'sphere', 'brass', [0, .04, 0], [.014, .014, .014], [0, 0, 0], true);
+  const secondsBase = secondsWheel.quaternion.clone();
+
+  const worm = part('telescope.worm', 'Clock-drive worm and thrust bearing', 'Telescope drive',
+    'Reduces the seconds wheel onto the main drive wheel.',
+    'A brass worm, a dark thrust block, two titanium bearing rings and a copper oil line sit beneath the seconds wheel.', mount, [0, .03, 0], 'Brass worm, dark thrust block and copper line');
+  worm.position.set(D.forkX + .24, D.pivot[1] + .08, .05);
+  axial(worm, 'brass', [0, 0, 0], .022, .18, 'x');
+  for (const x of [-.06, .06]) add(worm, 'ring', 'titanium', [x, 0, 0], [.032, .032, .032], [0, Math.PI / 2, 0], true);
+  add(worm, 'box', 'dark', [0, -.055, 0], [.09, .045, .09]);
+  rod(worm, 'copper', [.06, -.03, .02], [.16, -.10, .08], .004, true);
 
   const handset = part('telescope.handset', 'Hand controller and coiled cable', 'Telescope drive',
     'Gives a visible manual interface for the drive.',
@@ -366,6 +587,18 @@ export function createModel() {
     add(clock, 'cylinder', 'shell', [x, y, .64], [.075, .01, .075], [Math.PI / 2, 0, 0]);
     rod(clock, 'brass', [x, y, .65], [x + .05, y + .02, .65], .004);
   }
+  const clockHour = part('interior.clock-hand.hour', 'Sidereal clock hour hand', 'Interior',
+    'Shows the hour on the observatory sidereal dial.',
+    'A brass hour hand and a dark hub turn once per observing cycle on the left dial.', undefined, [0, .02, 0], 'Brass hand and dark hub');
+  clockHour.position.set(-.80, .96, .658);
+  rod(clockHour, 'brass', [0, 0, 0], [0, .045, 0], .004);
+  add(clockHour, 'cylinder', 'dark', [0, 0, 0], [.008, .01, .008], [Math.PI / 2, 0, 0], true);
+  const clockMinute = part('interior.clock-hand.minute', 'Sidereal clock minute hand', 'Interior',
+    'Shows the minute on the observatory sidereal dial.',
+    'A brass minute hand and a dark hub turn faster than the hour hand on the right dial.', undefined, [0, .02, 0], 'Brass hand and dark hub');
+  clockMinute.position.set(-.60, .96, .658);
+  rod(clockMinute, 'brass', [0, 0, 0], [0, .060, 0], .003);
+  add(clockMinute, 'cylinder', 'dark', [0, 0, 0], [.007, .01, .007], [Math.PI / 2, 0, 0], true);
 
   const heater = part('interior.dehumidifier', 'Dome dehumidifier and drain', 'Interior',
     'Shows the climate-control unit at the wall.',
@@ -382,6 +615,8 @@ export function createModel() {
 
   // ---------------------------------------------------------------- animation
   const bind = nodes.map(node => ({ node, p: node.position.clone(), q: node.quaternion.clone(), s: node.scale.clone() }));
+  const qSpinY = new THREE.Quaternion(), qSpinZ = new THREE.Quaternion(), qHingeX = new THREE.Quaternion(), qHingeY = new THREE.Quaternion();
+  const axisX = new THREE.Vector3(1, 0, 0), axisY = new THREE.Vector3(0, 1, 0), axisZ = new THREE.Vector3(0, 0, 1);
   function update(state = lastState, options = {}) {
     if (disposed) return;
     if (state?.telescope && state?.dome && state?.shutter) lastState = state;
@@ -389,9 +624,33 @@ export function createModel() {
     for (const b of bind) { b.node.position.copy(b.p); b.node.quaternion.copy(b.q); b.node.scale.copy(b.s); }
     const pose = lastState;
     domeGroup.rotation.y = pose.dome.angle;
+    mount.rotation.y = pose.telescope.azimuth;
     shutterLeft.rotation.y = -pose.shutter.angle;
     shutterRight.rotation.y = pose.shutter.angle;
     tube.rotation.x = -pose.telescope.altitude;
+    for (const record of rollers) {
+      qSpinZ.setFromAxisAngle(axisZ, pose.drive.rollerAngle);
+      record.node.quaternion.copy(record.base).multiply(qSpinZ);
+    }
+    for (const record of louvers) {
+      qHingeX.setFromAxisAngle(axisX, pose.mechanism.louvers[record.index]);
+      record.node.quaternion.copy(record.base).multiply(qHingeX);
+    }
+    qHingeX.setFromAxisAngle(axisX, pose.mechanism.hatch);
+    serviceHatch.quaternion.copy(hatchBase).multiply(qHingeX);
+    qHingeY.setFromAxisAngle(axisY, -pose.mechanism.serviceDoor);
+    serviceDoor.quaternion.multiply(qHingeY);
+    floorHatch.rotation.x = -pose.mechanism.floorHatch;
+    drawtube.position.copy(drawtubeBase); drawtube.position.z += pose.mechanism.focusTravel;
+    spider.rotation.z = pose.mechanism.spiderAngle;
+    secondary.rotation.x = pose.mechanism.secondaryTilt;
+    qSpinY.setFromAxisAngle(axisY, pose.drive.secondsAngle);
+    secondsWheel.quaternion.copy(secondsBase).multiply(qSpinY);
+    worm.rotation.x = pose.drive.wormAngle;
+    pierFan.rotation.z = pose.drive.fanAngle;
+    clockWeight.position.copy(clockWeightBase); clockWeight.position.y += pose.mechanism.clockWeight;
+    clockHour.rotation.z = pose.mechanism.clockHour;
+    clockMinute.rotation.z = pose.mechanism.clockMinute;
     for (const record of mirrors) {
       if (record.kind === 'pinion') record.node.rotation.y = pose.drive.pinionAngle;
       if (record.kind === 'drive') record.node.rotation.x = pose.drive.wheelAngle;
@@ -400,8 +659,18 @@ export function createModel() {
     kit.sync(options);
   }
   update(lastState);
+  // Fit the home view to the scanning dome, the full tube sweep and the stair.
+  const framePoints = [];
+  for (let i = 0; i < 16; i++) {
+    const a = i * TAU / 16;
+    framePoints.push(new THREE.Vector3(1.52 * Math.cos(a), 1.18, 1.52 * Math.sin(a)));
+    framePoints.push(new THREE.Vector3(1.36 * Math.cos(a), 2.62, 1.36 * Math.sin(a)));
+    framePoints.push(new THREE.Vector3(1.02 * Math.cos(a), .02, 1.02 * Math.sin(a)));
+  }
+  framePoints.push(new THREE.Vector3(0, 2.95, 0), new THREE.Vector3(0, .02, 1.92), new THREE.Vector3(.96, 1.1, .96));
+  framePoints.push(new THREE.Vector3(-1.72, 1.30, -1.30), new THREE.Vector3(.78, 1.30, -1.72), new THREE.Vector3(1.72, 1.30, -1.30));
   return {
-    group: kit.group, update, parts: kit.parts, stats: kit.stats,
+    group: kit.group, update, framePoints, parts: kit.parts, stats: kit.stats,
     get pickables() { return disposed ? [] : kit.pickables; },
     dispose() { if (disposed) return; disposed = true; kit.dispose(); kit.group.clear(); },
   };

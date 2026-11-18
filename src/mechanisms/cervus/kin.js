@@ -69,12 +69,17 @@ export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
     legs.push({ id: item.id, side: item.side, row: item.row, phase: p, stance: path.stance, foot, footLocal, hip, knee: solved.knee, ankle, metatarsus: sub(footLocal, ankle), kneeAngle });
   }
 
-  const head = { origin: D.headOrigin, yaw: 0.05 * Math.sin(a + 0.3), pitch: 0.02 * Math.sin(2 * a), jaw: controls.gape * Math.PI / 180 };
+  const display = 1 + 0.16 * Math.sin(2 * a + 0.6);
+  const head = {
+    origin: D.headOrigin, yaw: 0.05 * Math.sin(a + 0.3), pitch: 0.02 * Math.sin(2 * a),
+    roll: 0.018 * Math.sin(a + 1.2), jaw: controls.gape * Math.PI / 180 * display,
+    scan: 0.05 * Math.sin(a + 0.3),
+  };
   const mandibles = [-1, 1].map(side => {
     const links = [], points = [[side * D.mandibleBase[0], D.mandibleBase[1], D.mandibleBase[2]]];
     for (let i = 0; i < 3; i++) {
-      const open = controls.gape * Math.PI / 180;
-      const yaw = side * (i === 0 ? 0.24 + open * 0.9 : i === 1 ? 0.04 + open * 0.3 : -0.38);
+      const open = controls.gape * Math.PI / 180 * display;
+      const yaw = side * (i === 0 ? 0.24 + open * 0.9 : i === 1 ? 0.04 + open * 0.3 : -0.38 + 0.05 * Math.sin(a + side * 0.4));
       const rise = i === 0 ? 0.14 : i === 1 ? 0.02 : -0.10;
       const direction = unit([Math.sin(yaw), rise, -Math.cos(yaw)]);
       const start = points[i], end = add(start, mul(direction, D.mandibleLengths[i]));
@@ -87,10 +92,11 @@ export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
   const antennae = [-1, 1].map(side => {
     const sweep = controls.antenna * Math.PI / 180, points = [[side * D.antennaBase[0], D.antennaBase[1], D.antennaBase[2]]], links = [];
     for (let i = 0; i < D.antennaCount; i++) {
-      const yaw = side * (0.36 + sweep + i * 0.06), pitch = 0.18 + i * 0.11;
+      const yaw = side * (0.36 + sweep + i * 0.06) + 0.10 * Math.sin(a + side * 0.5 - i * 0.3);
+      const pitch = 0.18 + i * 0.11 + 0.06 * Math.sin(2 * a - i * 0.42 + side * 0.35);
       const direction = unit([Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)]);
       const start = points[i], end = add(start, mul(direction, D.antennaLink));
-      links.push({ index: i, start, end });
+      links.push({ index: i, start, end, yaw, pitch });
       points.push(end);
     }
     return { side, links, points };
@@ -115,7 +121,14 @@ export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
   return {
     driveAngle: a, phase, controls, body: { offset, bob, sway }, legs, head, mandibles, antennae,
     abdomen: { links: abdomen, points: abdomenPoints },
-    elytra: { angle: controls.elytra * Math.PI / 180, flutter: 0.02 * Math.sin(2 * a) },
+    elytra: {
+      angle: controls.elytra * Math.PI / 180, flutter: 0.045 * Math.sin(2 * a + 0.35),
+      liftWave: 0.030 * Math.sin(a + 0.9), pitch: 0.05 * Math.sin(a + 2.1),
+    },
+    mouth: {
+      jaw: controls.gape * Math.PI / 180 * display,
+      palp: 0.10 * Math.sin(2 * a + 0.4), maxilla: 0.07 * Math.sin(a - 0.8),
+    },
     metrics: {
       cadenceHz: controls.cadence, strideMm: controls.stride * 1000, gapeDeg: controls.gape, elytraDeg: controls.elytra,
       contacts: legs.filter(leg => leg.stance).length, jawMm: D.mandibleLengths.reduce((s, v) => s + v, 0) * 1000,

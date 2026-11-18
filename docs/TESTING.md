@@ -1,12 +1,23 @@
 # Verification and device evidence
 
+## Thirty-mechanism motion and horse verification: 18 November 2026
+
+EQUUS H8 (collection 030) was added, and eight existing mechanisms were rebuilt for thicker silhouettes and continuous motion: SENTINEL H9, MAMMUT M4, ABYSS S9, CERVUS B6, SPECULA O6, FABER R6, CHRONOS T3 and ORBIT P3. The changes were verified against the final source and production bundle in desktop Chrome.
+
+- Unit and integration suite: **306 tests, 305 passed, zero failed, one optional WebGL test skipped**.
+- The suite now includes `tests/motion.test.mjs`, a global gate that samples nine non-commensurate cycle phases per mechanism and requires at least `max(20, ceil(parts × 0.18))` moving part IDs and at least 24 moving instances. All thirty mechanisms pass. This avoids the phase-aliasing that made integer-ratio gear trains look motionless at simple fractions of their cycle.
+- All thirty mechanisms passed the desktop Chrome collection suite: measured changing pixels, real instance-transform pause/step behaviour, anatomy metadata and search, solid/X-ray/section, exact exploded and reassembled transforms, every simulation input at both limits, all five lessons, one live canvas per model, no controls over the canvas, labels of at least 12 CSS pixels, full-pixel-density rendering and responsive 360×640, 393×852, 852×393 and 1280×900 layouts.
+- The production web bundle builds successfully. No 30-mechanism APK was installed or frame-timed on a phone: the previously used Redmi Note 11 was disconnected. Native results below remain historical evidence and do not certify this build.
+
+Motion counts over the nine non-commensurate phases (moving part IDs / total, then moving instances): SENTINEL 240/240 and 2,005; MAMMUT 266/274 and 1,855; ABYSS 159/167 and 1,464; CERVUS 182/190 and 1,410; SPECULA O6 165/194 and 1,433; FABER R6 123/180 and 807; CHRONOS T3 120/176 and 1,681; ORBIT P3 118/196 and 1,032; EQUUS 120/120 and 924. Fixed display bases remain static; the reworked models and EQUUS H8 are additionally covered by model-specific gates that name their moving subsystems.
+
 ## DRACONIS D6 addition: 18 November 2026
 
-DRACONIS D6 (collection 029, winged dragon) was verified in a Linux container: `npm test`, `npm run build`, and `pose-qa.mjs` restricted to `dragon` in headless Chromium with SwiftShader (24 rendered poses fit the home camera). `collection-qa.mjs` and native Android runs were **not** repeated for this addition. The stage accepts optional `framePoints` from a model so the home camera fits whole-cycle geometry of shape-changing mechanisms; models without it keep the previous box fit.
+DRACONIS D6 (collection 029, winged dragon) was verified in a Linux container: `npm test`, `npm run build`, and `pose-qa.mjs` restricted to `dragon` in headless Chromium with SwiftShader (24 rendered poses fit the home camera). `collection-qa.mjs` and native Android runs were **not** repeated for that isolated addition; the thirty-mechanism pass above supersedes this entry. The stage accepts optional `framePoints` from a model so the home camera fits whole-cycle geometry of shape-changing mechanisms; models without it keep the previous box fit.
 
 ## Nineteen-mechanism verification: 17 November 2026
 
-The collection was expanded from nine to nineteen mechanisms. The following local results were recorded against the final source and production bundle. SENTINEL H9 (collection 020) was added after that pass, followed by MAMMUT M4, ABYSS S9 and CERVUS B6 (collections 021–023), then ASTRARIUM OR-9, TERRA X7, SPECULA O6, HARMONIA P8 and FABER R6 (collections 024–028). Their deterministic kinematics and geometry are covered by the unit suite and shared catalog gates, but the browser collection, pose-budget and native checks below have not yet been rerun for the twenty-eight-mechanism build.
+The collection was expanded from nine to nineteen mechanisms. The following local results were recorded against the final source and production bundle at that time. SENTINEL H9 (collection 020) was added after that pass, followed by MAMMUT M4, ABYSS S9 and CERVUS B6 (collections 021–023), then ASTRARIUM OR-9, TERRA X7, SPECULA O6, HARMONIA P8 and FABER R6 (collections 024–028). The thirty-mechanism verification above supersedes this section; the 28-mechanism build was not independently rerun through the full browser collection QA before the final expansion.
 
 - Unit and integration suite: **218 tests, 217 passed, zero failed, one optional WebGL test skipped**.
 - All nineteen mechanisms passed the desktop Chrome collection suite: measured changing pixels, real instance-transform pause/step behaviour, anatomy metadata and search, solid/X-ray/section, exact exploded and reassembled transforms, every simulation input at both limits, all five lessons, one live canvas per model, no controls over the canvas, labels of at least 12 CSS pixels, full-pixel-density rendering and responsive 360×640, 393×852, 852×393 and 1280×900 layouts.
@@ -14,9 +25,9 @@ The collection was expanded from nine to nineteen mechanisms. The following loca
 - Compact statistics remain a 40-pixel strip at 393 pixels wide, and every statistics label fits in its cell.
 - The final production web bundle was built and synced into the Android assets. The debug APK was rebuilt successfully.
 
-- Current source suite after the five object additions: **252 tests, 251 passed, zero failed, one optional WebGL test skipped**. The production web bundle also builds successfully.
+- At the end of that 28-model phase the suite recorded **252 tests, 251 passed, zero failed, one optional WebGL test skipped**, and the production web bundle built successfully.
 
-**Not yet re-verified on the phone:** the Redmi Note 11 used for earlier native testing was disconnected before the nineteen-model APK could be installed. The native results below are the historical nine-mechanism evidence and do not certify the ten new models, the new APK or its frame times. Re-run the native collection command after reconnecting the explicitly selected device.
+**Not yet re-verified on the phone:** the Redmi Note 11 used for earlier native testing was disconnected before the nineteen-model APK could be installed. The native results below are the historical nine-mechanism evidence and do not certify later models, the current APK or its frame times. Re-run the native collection command after reconnecting the explicitly selected device.
 
 ### New-mechanism geometry budgets
 
@@ -31,18 +42,19 @@ Measured from submitted instance buffers in the model tests; low tiers keep ever
 | ALULA H2 | 143 | 1,846 | 111,240 | 74,640 | 18 |
 | DEXTRA H5 | 168 | 2,195 | 113,052 | 72,900 | 16 |
 | ASTRA R9 | 177 | 2,139 | 132,780 | 79,308 | 18 |
-| ORBIT P3 | 104 | 2,155 | 86,508 | 56,652 | 18 |
 | TITAN S6 | 125 | 1,823 | 87,420 | 56,148 | 19 |
-| CHRONOS T3 | 145 | 2,080 | 87,024 | 69,564 | 15 |
-| SENTINEL H9 | 137 | 1,078 | 55,344 | 31,908 | 29 |
-| MAMMUT M4 | 149 | 771 | 50,316 | 34,536 | 22 |
-| ABYSS S9 | 111 | 894 | 48,528 | 26,676 | 21 |
-| CERVUS B6 | 96 | 565 | 45,564 | 35,712 | 18 |
+| CHRONOS T3 | 176 | 2,282 | 97,740 | 79,728 | 16 |
+| SENTINEL H9 | 240 | 2,005 | 102,360 | 59,616 | 31 |
+| MAMMUT M4 | 274 | 1,895 | 108,132 | 58,704 | 26 |
+| ABYSS S9 | 167 | 1,528 | 82,236 | 56,124 | 22 |
+| CERVUS B6 | 190 | 1,450 | 91,992 | 57,888 | 26 |
 | ASTRARIUM OR-9 | 102 | 1,322 | 65,448 | 58,332 | 20 |
 | TERRA X7 | 84 | 577 | 30,312 | 22,032 | 21 |
-| SPECULA O6 | 132 | 1,141 | 58,224 | 39,000 | 22 |
+| SPECULA O6 | 194 | 1,698 | 92,172 | 50,412 | 22 |
 | HARMONIA P8 | 118 | 712 | 41,724 | 25,908 | 16 |
-| FABER R6 | 81 | 611 | 32,832 | 24,156 | 25 |
+| FABER R6 | 180 | 1,187 | 69,720 | 34,980 | 29 |
+| ORBIT P3 | 196 | 2,135 | 88,920 | 61,368 | 20 |
+| EQUUS H8 | 120 | 924 | 43,392 | 30,072 | 24 |
 
 ### Historical native result: nine-mechanism APK
 

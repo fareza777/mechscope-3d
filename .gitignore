@@ -14,3 +14,4 @@ qa/
 releases/
 playwright-report/
 test-results/
+android/keystore/signing.properties

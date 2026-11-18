@@ -87,6 +87,19 @@ export function poseAt(driveAngle = 0, input = DEFAULT_INPUTS) {
   const sway = 0.028 * Math.sin(angle);
   const offset = [sway, D.pelvisY + bob, 0];
   const torsoYaw = D.torsoYaw * Math.sin(angle);
+  const breath = Math.sin(2 * angle);
+  const secondary = {
+    breath,
+    shift: Math.sin(angle + 0.35),
+    hipRoll: Math.sin(angle + 0.20),
+    shoulderRoll: Math.sin(angle + 1.15) * 0.5 + Math.sin(3 * angle + 0.4) * 0.5,
+    vent: 0.5 + 0.5 * Math.sin(2 * angle + 0.35),
+    radiator: 0.5 + 0.5 * Math.sin(2 * angle + 0.95),
+    tether: 0.5 + 0.5 * Math.sin(3 * angle + 1.10),
+    scan: Math.sin(3 * angle + 0.65),
+    handPulse: 0.5 + 0.5 * Math.sin(2 * angle + 0.50),
+    gear: angle,
+  };
 
   const legs = [];
   for (const side of [-1, 1]) {
@@ -128,8 +141,10 @@ export function poseAt(driveAngle = 0, input = DEFAULT_INPUTS) {
       return {
         index, x, thumb,
         spread: (index - 1.5) * 0.045 + 0.02 * Math.sin(angle + index * 0.7),
-        proximal: 0.10 + controls.grip * Math.PI / 180 * (thumb ? 0.42 : 0.56 + index * 0.035) + 0.022 * Math.sin(2 * angle + index * 0.8),
-        distal: 0.08 + controls.grip * Math.PI / 180 * (thumb ? 0.34 : 0.46 + index * 0.030) + 0.018 * Math.sin(2 * angle + index * 0.8 + 0.6),
+        proximal: 0.14 + controls.grip * Math.PI / 180 * (thumb ? 0.42 : 0.56 + index * 0.035)
+          + 0.085 * Math.sin(2 * angle + index * 0.8) + 0.028 * Math.sin(3 * angle + index * 0.37),
+        distal: 0.12 + controls.grip * Math.PI / 180 * (thumb ? 0.34 : 0.46 + index * 0.030)
+          + 0.070 * Math.sin(2 * angle + index * 0.8 + 0.6) + 0.022 * Math.sin(3 * angle + index * 0.37 + 0.9),
       };
     });
     hands.push({
@@ -173,9 +188,13 @@ export function poseAt(driveAngle = 0, input = DEFAULT_INPUTS) {
   );
 
   return {
-    driveAngle: angle, phase, controls,
+    driveAngle: angle, phase, controls, secondary,
     body: { offset, bob, sway },
-    torso: { yaw: torsoYaw },
+    torso: {
+      yaw: torsoYaw,
+      pitch: 0.008 * Math.sin(2 * angle + 0.70),
+      roll: 0.010 * Math.sin(angle + 0.35),
+    },
     legs, hands, neck: { links: neckLinks, points: neckPoints }, head,
     metrics: {
       cadenceHz: controls.cadence,

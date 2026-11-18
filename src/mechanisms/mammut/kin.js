@@ -72,7 +72,15 @@ export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
     legs.push({ id: item.id, side: item.side, front: item.front, phase: p, stance: path.stance, foot, footLocal, hip, knee: solved.knee, ankle, metatarsus: sub(footLocal, ankle), kneeAngle });
   }
 
-  const head = { origin: D.headOrigin, pitch: -0.04 + 0.025 * Math.sin(2 * a), yaw: 0.06 * Math.sin(a + 0.5) };
+  const head = {
+    origin: D.headOrigin, pitch: -0.04 + 0.025 * Math.sin(2 * a), yaw: 0.06 * Math.sin(a + 0.5),
+    roll: 0.018 * Math.sin(a + 1.1), scan: 0.06 * Math.sin(a + 0.5),
+  };
+  const tusks = [-1, 1].map(side => ({
+    side,
+    lift: 0.020 * Math.sin(a + 0.9 + side * 0.35),
+    sway: 0.012 * Math.sin(a - 0.4 + side * 0.55),
+  }));
   const curl = controls.curl * Math.PI / 180;
   const trunk = [], trunkPoints = [D.trunkBase];
   for (let i = 0; i < D.trunkCount; i++) {
@@ -89,8 +97,15 @@ export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
     const side = 0.08 * Math.sin(a - i * 0.45);
     const direction = unit([side, -Math.sin(pitch), Math.cos(pitch)]);
     const start = tailPoints[i], end = add(start, mul(direction, D.tailLink));
-    tail.push({ index: i, start, end, pitch });
+    tail.push({ index: i, start, end, pitch, yaw: side });
     tailPoints.push(end);
+  }
+  const trunkRams = [];
+  for (let i = 0; i < D.trunkCount - 1; i++) for (const side of [-1, 1]) {
+    const at = k => add(trunk[i].start, mul(sub(trunk[i].end, trunk[i].start), k));
+    const bt = k => add(trunk[i + 1].start, mul(sub(trunk[i + 1].end, trunk[i + 1].start), k));
+    const a0 = add(at(.62), [side * .055, 0, 0]), b0 = add(bt(.20), [side * .048, 0, 0]);
+    trunkRams.push({ joint: i, side, a: a0, b: b0, length: distance(a0, b0) });
   }
   const residual = Math.max(
     ...legs.map(leg => Math.max(Math.abs(distance(leg.hip, leg.knee) - D.femur), Math.abs(distance(leg.knee, leg.ankle) - D.tibia), Math.abs(distance(leg.ankle, leg.footLocal) - Math.hypot(...D.ankleLift)))),
@@ -98,12 +113,21 @@ export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
     ...tail.map(link => Math.abs(distance(link.start, link.end) - D.tailLink)),
   );
   return {
-    driveAngle: a, phase, controls, body: { offset, bob, sway }, legs, head, trunk: { links: trunk, points: trunkPoints }, tail: { links: tail, points: tailPoints },
-    ears: { flare: controls.ear * Math.PI / 180, pitch: 0.08 * Math.sin(a + 0.3) },
+    driveAngle: a, phase, controls, body: { offset, bob, sway }, legs, head, tusks,
+    trunk: { links: trunk, points: trunkPoints }, tail: { links: tail, points: tailPoints }, trunkRams,
+    ears: {
+      flare: controls.ear * Math.PI / 180,
+      pitch: 0.08 * Math.sin(a + 0.3),
+      flap: 0.10 * Math.sin(a + 1.15),
+      tip: 0.16 * Math.sin(a - 0.55),
+      hinge: 0.06 * Math.sin(2 * a + 0.4),
+    },
+    howdah: { sway: 0.012 * Math.sin(a + 0.7), strain: 0.008 * Math.sin(2 * a - 0.4) },
     metrics: {
       cadenceHz: controls.cadence, strideMm: controls.stride * 1000, curlDeg: controls.curl, earDeg: controls.ear,
       trunkMm: D.trunkCount * D.trunkLink * 1000, contacts: legs.filter(leg => leg.stance).length,
       kneeFlexDeg: legs.reduce((sum, leg) => sum + leg.kneeAngle * 180 / Math.PI, 0) / 4, linkResidualMm: residual * 1000,
+      ramStrokeMm: Math.max(...trunkRams.map(ram => ram.length)) * 1000,
     },
   };
 }

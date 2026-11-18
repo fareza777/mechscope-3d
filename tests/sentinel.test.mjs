@@ -28,6 +28,48 @@ function counts(model) {
   return map;
 }
 const worldOf = (node, local) => new THREE.Vector3(...local).applyMatrix4(node.matrixWorld).toArray();
+const CORNERS = [[-1, -1, -1], [1, -1, -1], [-1, 1, -1], [1, 1, -1], [-1, -1, 1], [1, -1, 1], [-1, 1, 1], [1, 1, 1]];
+function renderedBounds(model) {
+  model.group.updateMatrixWorld(true);
+  const box = new THREE.Box3(), m = new THREE.Matrix4(), v = new THREE.Vector3();
+  for (const mesh of model.pickables) {
+    mesh.geometry.computeBoundingBox(); const g = mesh.geometry.boundingBox;
+    for (let i = 0; i < mesh.count; i++) {
+      mesh.getMatrixAt(i, m);
+      for (const c of CORNERS) {
+        v.set(c[0] < 0 ? g.min.x : g.max.x, c[1] < 0 ? g.min.y : g.max.y, c[2] < 0 ? g.min.z : g.max.z).applyMatrix4(m);
+        box.expandByPoint(v);
+      }
+    }
+  }
+  return box;
+}
+function motionSnapshot(model) {
+  model.group.updateMatrixWorld(true);
+  const rows = [];
+  for (const mesh of model.pickables) for (let i = 0; i < mesh.count; i++) {
+    rows.push({ id: mesh.userData.instanceParts[i], matrix: new THREE.Matrix4().fromArray(mesh.instanceMatrix.array, i * 16) });
+  }
+  const anchor = rows.find(row => row.id === 'pelvis.chassis').matrix.clone().invert();
+  const map = new Map();
+  for (const row of rows) {
+    const relative = new THREE.Matrix4().multiplyMatrices(anchor, row.matrix);
+    if (!map.has(row.id)) map.set(row.id, []);
+    map.get(row.id).push(...relative.elements);
+  }
+  return { map, ids: rows.map(row => row.id) };
+}
+function requireFloor(box) { assert.ok(box.min.y >= -1e-6, `floor ${box.min.y}`); }
+function budgetGate(stats, label = 'balanced') {
+  assert.ok(stats.instances >= 1400 && stats.instances <= 2100, `${label} instances ${stats.instances}`);
+  assert.ok(stats.triangles >= 85000 && stats.triangles <= 130000, `${label} triangles ${stats.triangles}`);
+  assert.ok(stats.triangles <= 200000, `${label} absolute triangle ceiling`);
+  assert.ok(stats.drawCalls <= 40, `${label} draw calls ${stats.drawCalls}`);
+  assert.ok(stats.selectableParts >= 170, `${label} selectable parts ${stats.selectableParts}`);
+}
+function requireMotion(moving, total) {
+  assert.ok(moving.size / total >= 0.70, `${moving.size}/${total} parts move (${(100 * moving.size / total).toFixed(1)}%)`);
+}
 
 test('H9 descriptor exposes four bounded controls, five lessons and a lazy model', async () => {
   assert.equal(descriptor.id, 'sentinel'); assert.equal(descriptor.title, 'SENTINEL H9');
@@ -112,8 +154,8 @@ test('sampler is deterministic, periodic, finite, reversible and continuous thro
   const a = sample(-1e-8), b = sample(1e-8); a.legs.forEach((leg, i) => near(distance(leg.foot, b.legs[i].foot), 0, 1e-7));
 });
 
-test('129+ selectable assemblies have unique metadata and appear in both quality tiers', () => withModel(model => {
-  assert.ok(model.parts.length >= 130); assert.equal(model.parts.length, 137);
+test('240 heavy assemblies, 2005 instances and 102360 balanced triangles keep every part in low', () => withModel(model => {
+  assert.ok(model.parts.length >= 170); assert.equal(model.parts.length, 240);
   const ids = new Set(model.parts.map(part => part.id)); assert.equal(ids.size, model.parts.length);
   assert.equal(new Set(model.parts.map(part => part.name)).size, ids.size);
   for (const part of model.parts) {
@@ -128,13 +170,20 @@ test('129+ selectable assemblies have unique metadata and appear in both quality
   }
   model.update(sample(0.4), { quality: 'balanced' });
   const balanced = { ...model.stats };
+  budgetGate(balanced);
+  assert.equal(balanced.instances, 2005);
+  assert.equal(balanced.triangles, 102360);
+  assert.equal(balanced.drawCalls, 31);
   model.update(sample(0.4), { quality: 'low' });
+  assert.equal(model.stats.instances, 943);
+  assert.equal(model.stats.triangles, 59616);
   assert.ok(model.stats.instances < balanced.instances, 'Efficient tier removes micro-detail only');
-  assert.ok(balanced.triangles >= 45000 && balanced.triangles <= 120000, `triangles ${balanced.triangles}`);
-  assert.ok(balanced.drawCalls <= 40, `draws ${balanced.drawCalls}`);
-  assert.ok(balanced.instances >= 950, `instances ${balanced.instances}`);
   assert.equal(model.parts.filter(part => /finger/.test(part.id)).length, 20);
   assert.equal(model.parts.filter(part => /toe/.test(part.id)).length, 6);
+  assert.equal(model.parts.filter(part => /^pack\.vent\./.test(part.id)).length, 6);
+  assert.equal(model.parts.filter(part => /^pelvis\.gearbox\./.test(part.id)).length, 4);
+  assert.equal(model.parts.filter(part => /^shoulder\.(L|R)\.pauldron$/.test(part.id)).length, 2);
+  assert.throws(() => budgetGate({ ...balanced, instances: 1399 }), /instances/);
 }));
 
 test('rendered legs, arms, head and fingers follow the sampled pose, not keyframes', () => withModel(model => {
@@ -181,7 +230,6 @@ test('rendered legs, arms, head and fingers follow the sampled pose, not keyfram
   const head = model.group.getObjectByName('head.carrier');
   near(distance(worldOf(head, [0, 0, 0]), worldOf(torso, state.head.origin)), 0, 2e-7);
   near(head.rotation.x, state.head.pitch, 1e-12); near(head.rotation.y, state.head.yaw, 1e-12);
-  model.group.getObjectByName('head.jawGroup');
   const jaw = model.group.getObjectByName('head.jawGroup');
   near(jaw.rotation.x, -state.head.jaw, 1e-12);
   assert.ok(body.position.distanceTo(new THREE.Vector3(...offset)) < 1e-12);
@@ -206,6 +254,77 @@ test('controls change real instance transforms at a frozen timestamp', () => wit
   const period = 1 / descriptor.cycleHz(base.controls);
   model.update(sample(0.317 + period), { quality: 'balanced', mode: 'solid', explode: 0 });
   assert.equal(JSON.stringify(snapshot(model)), reference, 'the whole rendered pose repeats after one gait cycle');
+}));
+
+test('motion gate: 229 of 240 parts and 1871 instances move across nine non-commensurate phases', t => withModel(model => {
+  // Golden-ratio offsets: deliberately not the nine equal phase divisions.
+  const phases = [0.031, 0.649, 0.267, 0.885, 0.503, 0.121, 0.739, 0.357, 0.975];
+  assert.equal(new Set(phases).size, 9);
+  const snaps = phases.map(phase => {
+    model.update(sample(phase / cycleHz(DEFAULT_INPUTS)), { quality: 'balanced', mode: 'solid', explode: 0 });
+    return motionSnapshot(model);
+  });
+  const tolerance = 1e-5, moving = new Set();
+  for (let k = 1; k < snaps.length; k++) for (const [id, values] of snaps[k].map) {
+    const reference = snaps[0].map.get(id);
+    for (let i = 0; i < values.length; i++) if (Math.abs(values[i] - reference[i]) > tolerance) { moving.add(id); break; }
+  }
+  let movingInstances = 0;
+  for (const id of snaps[0].ids) if (moving.has(id)) movingInstances++;
+  requireMotion(moving, model.parts.length);
+  assert.ok(moving.size >= 200, `${moving.size} moving part IDs`);
+  assert.ok(movingInstances >= 1700, `${movingInstances} moving instances`);
+  for (const [name, pattern, minimum] of [
+    ['limbs', /^(leg|arm)\./, 50],
+    ['hands', /^(hand|finger)\./, 20],
+    ['pauldrons', /^shoulder\.(L|R)\.pauldron$/, 2],
+    ['vents', /^pack\.(vent|louver)\./, 6],
+    ['gearbox', /^pelvis\.gearbox\./, 3],
+    ['head', /^head\./, 15],
+  ]) {
+    const parts = model.parts.filter(part => pattern.test(part.id));
+    const moved = parts.filter(part => moving.has(part.id));
+    assert.ok(moved.length >= minimum, `${name}: ${moved.length}/${parts.length} move`);
+  }
+  assert.equal(moving.has('pelvis.girdle.L'), false, 'static pelvis plate is the negative control');
+  assert.equal(moving.has('tether.hook'), false, 'static tether hook is the negative control');
+  assert.throws(() => requireMotion(new Set(['pelvis.girdle.L']), model.parts.length), /parts move/);
+  // The left pauldron must counter-swing against the left arm, not just follow the torso.
+  const swingState = sample(0.211);
+  model.update(swingState);
+  const pauldron = model.group.getObjectByName('shoulder.L.pauldron');
+  near(pauldron.rotation.x, -swingState.hands[0].swing * .62, 1e-12);
+  t.diagnostic(`${moving.size}/${model.parts.length} moving parts, ${movingInstances}/${snaps[0].ids.length} moving instances`);
+}));
+
+test('floor, envelope, root identity, frame points and negative controls stay honest', t => withModel(model => {
+  const swept = new THREE.Box3();
+  let floor = Infinity, height = 0, width = 0, depth = 0;
+  for (const input of [
+    { stride: 0.24, lift: 0.12, grip: 24 },
+    { stride: 0.36, lift: 0.20, grip: 55 },
+    { stride: 0.12, lift: 0.05, grip: 0 },
+  ]) for (let i = 0; i < 12; i++) {
+    model.update(sample(i / (12 * 0.42), { cadence: 0.42, ...input }));
+    const box = renderedBounds(model), size = box.getSize(new THREE.Vector3());
+    requireFloor(box);
+    swept.union(box);
+    floor = Math.min(floor, box.min.y); height = Math.max(height, box.max.y);
+    width = Math.max(width, size.x); depth = Math.max(depth, size.z);
+    assert.ok(size.x <= 1.4, `width ${size.x}`); assert.ok(size.z <= 1.2, `depth ${size.z}`);
+    assert.ok(box.max.y <= 2.45, `height ${box.max.y}`);
+    assert.deepEqual(model.group.position.toArray(), [0, 0, 0]);
+    assert.deepEqual(model.group.quaternion.toArray(), [0, 0, 0, 1]);
+    assert.deepEqual(model.group.scale.toArray(), [1, 1, 1]);
+  }
+  model.group.traverse(node => assert.ok(node.scale.x >= 0 && node.scale.y >= 0 && node.scale.z >= 0, `${node.name}: negative scale`));
+  assert.ok(model.framePoints.length >= 500, `${model.framePoints.length} frame points`);
+  for (const point of model.framePoints) finite(point.toArray());
+  const framed = new THREE.Box3().setFromPoints(model.framePoints);
+  assert.ok(framed.containsBox(swept), `camera frame ${framed.min.toArray()}..${framed.max.toArray()} misses swept ${swept.min.toArray()}..${swept.max.toArray()}`);
+  assert.ok(framed.max.y < 2.5 && framed.max.y > 2.2, 'camera frame covers the full machine height');
+  assert.throws(() => requireFloor(new THREE.Box3(new THREE.Vector3(-0.1, -0.02, -0.1), new THREE.Vector3(0.1, 0.1, 0.1))), /floor/);
+  t.diagnostic(`floor ${floor.toFixed(4)} m; envelope ${width.toFixed(3)} W × ${depth.toFixed(3)} D × ${height.toFixed(3)} H m; ${model.framePoints.length} frame points`);
 }));
 
 test('dispose is idempotent and later updates and queries are inert', () => withModel(model => {

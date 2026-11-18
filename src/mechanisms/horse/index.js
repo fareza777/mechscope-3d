@@ -1,0 +1,23 @@
+import { DEFAULT_INPUTS, cycleHz, sample } from './kin.js';
+
+export const descriptor = {
+  id: 'horse', title: 'EQUUS H8', family: 'Mechanical Horse', collection: '030',
+  tagline: 'Four thick hooves, twenty-three vertebrae and one dressage test in steel.',
+  description: 'An original conceptual horse automaton with four unguligrade inverse-kinematics legs, a deep five-link barrel, eight-link arched neck, ten-link tail, broad mane and tail plume, articulated ears and jaw, breathing ribcage, hip gearbox, heart flywheel, saddle and eight hydraulic rams. One master phase blends halt, walk, trot, extended trot, rear and settle. It is an educational kinematic choreography, not animal locomotion, contact-force, balance or veterinary simulation.',
+  defaultInputs: DEFAULT_INPUTS,
+  controls: [
+    { key: 'tempo', label: 'Test tempo', min: .025, max: .10, step: .005, unit: 'Hz', precision: 3 },
+    { key: 'stride', label: 'Stride scale', min: .70, max: 1.30, step: .01, unit: '×', precision: 2 },
+    { key: 'head', label: 'Neck arch', min: 0, max: 1, step: .01, unit: '', precision: 2 },
+  ],
+  specs: [{ value: '4', label: 'HOOVES' }, { value: '23', label: 'VERTEBRAE' }],
+  cycleLabel: 'DRESSAGE TEST', cycleHz, sample,
+  lessons: [
+    { title: 'One phase, six movements', short: 'A complete dressage test', text: 'A single master phase drives every joint. Smooth overlapping envelopes move through halt, walk, trot, extended trot, a raised forehand rear and a settled halt. Each envelope starts and ends at zero slope, so posture never jumps and the performance repeats exactly. Raising the rear envelope parks the hind hooves and lifts both fore hooves into the chest frame instead of dragging them through the floor.', fact: 'Twelve strides and fourteen breaths fit an integer number of times into each cycle; stance duty stays at four or two hooves, never one.', view: 'home', mode: 'solid', explode: 0 },
+    { title: 'Four thick legs, four exact solutions', short: 'Unguligrade inverse kinematics', text: 'Every hoof contact is chosen first, then a fetlock rises above it and an ankle is placed by the cannon angle. The knee or elbow sits at the circle intersection of the rigid upper and lower members; a pole vector bends hind knees forward and fore elbows back. The broad cannon continues to the fetlock, while the hoof stays a level service pad. Unreachable targets throw rather than stretching a link.', fact: 'Hind upper, lower and cannon links are 660, 620 and 300 mm; fore links are 620, 600 and 260 mm. Eight hydraulic rams show the changing stroke.', view: 'side', mode: 'xray', explode: .1 },
+    { title: 'An arched neck carries the mass', short: 'Cervical chain and mane wave', text: 'Eight rigid cervical links blend a collected posture with a high arched table. The neck control raises the crest, the head adds its own nod and the ears flick on independent hinges. A thick eight-plate mane hangs from the crest and follows the same phase with a lag, so the silhouette changes continuously without deforming any vertebra.', fact: 'The horse has twenty-three serial vertebrae: five dorsal, eight cervical and ten caudal. The mane adds eight selectable shell plates.', view: 'front', mode: 'solid', explode: 0 },
+    { title: 'Tail, ribs and tack move together', short: 'Counterweight and breathing', text: 'Ten tapering caudal links carry a broad six-strand plume. The tail lifts as a counterweight during the rear and swishes with a growing phase lag. Five pairs of bellows ribs expand the flank on each breath beneath the deep barrel armour, and the saddle, girth, stirrup irons and bridle remain attached to their real moving frames rather than floating in world space.', fact: 'The ribcage breathes with a 14-cycle rhythm; the tail plume is made of six selectable shell ribbons with copper cores.', view: 'detail', mode: 'cutaway', explode: .15 },
+    { title: 'Deep armour over an open mechanism', short: 'Barrel, heart and hip drive', text: 'The pale barrel panels are deliberately thick, but the belly, flank gaps and chest window stay open for inspection. Inside are a three-axis heart flywheel, a three-gear hip transfer box, copper service lines, hydraulic rams and the serial spine. Use X-ray to ghost only the shell armour, or explode the saddle, plates, members, rams and plume to see how the horse is assembled.', fact: 'Efficient quality removes fasteners and secondary service detail while every selectable assembly remains present; no textures or external models are used.', view: 'exploded', mode: 'xray', explode: .7 },
+  ],
+  async createModel() { return (await import('./model.js')).createModel(); },
+};
