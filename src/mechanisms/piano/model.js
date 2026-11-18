@@ -9,7 +9,7 @@ const OUTLINE = [
 
 export function createModel() {
   const kit = createMechanicalKit('HARMONIA P8 · concert grand automaton');
-  const nodes = [], keys = [], hammers = [], dampers = [], pedals = [];
+  const nodes = [], keys = [], hammers = [], jacks = [], dampers = [], strings = [], pedals = [];
   const add = kit.add, rod = kit.rod, aim = kit.aim;
   let disposed = false, lastState = sample(0);
   const part = (id, name, system, purpose, how, parent, explode = [0, .10, 0], material = 'Pale alloy, dark action felt and brass hardware') => {
@@ -208,6 +208,16 @@ export function createModel() {
     add(hammer, 'sphere', 'rubber', [0, .052, .178], [.018, .010, .012], [0, 0, 0], true);
     hammers.push(hammer);
 
+    const jack = part(`jack.${String(note.index + 1).padStart(2, '0')}`, `Jack ${String(note.index + 1).padStart(2, '0')} · ${label}`, 'Action',
+      `Lifts the ${label} hammer butt through a visible whippen linkage.`,
+      'A dark upright lever, a brass pivot eye and a titanium toe turn under the key tail without a repetition spring solver.', undefined, [0, .04, 0], 'Dark lever, brass eye and titanium toe');
+    jack.position.set(note.x, .705, .505);
+    plate(jack, 'dark', [0, 0, 0], [.022, .18, .030]);
+    add(jack, 'ring', 'brass', [0, -.082, 0], [.018, .018, .018], [Math.PI / 2, 0, 0]);
+    plate(jack, 'titanium', [0, .083, -.012], [.040, .026, .020]);
+    add(jack, 'bolt', 'titanium', [0, -.065, .015], [.006, .010, .006], [Math.PI / 2, 0, 0], true);
+    jacks.push(jack);
+
     const damper = part(`damper.${String(note.index + 1).padStart(2, '0')}`, `Damper ${String(note.index + 1).padStart(2, '0')} · ${label}`, 'Action',
       `Lifts clear of the ${label} string when the key or sustain pedal is used.`,
       'A dark felt block, a brass wire and a pale damper head rise vertically from the damper rail.', undefined, [0, .04, 0], 'Dark felt block and brass wire');
@@ -227,6 +237,7 @@ export function createModel() {
     add(string, 'cylinder', 'brass', [0, -.01, D.frontBridge], [.010, .020, .010], [0, 0, 0], true);
     add(string, 'cylinder', 'brass', [0, -.01, note.tail + .02], [.007, .016, .007], [0, 0, 0], true);
     add(string, 'box', 'dark', [0, .006, note.tail + .02], [.032, .012, .022], [0, 0, 0], true);
+    strings.push(string);
   });
 
   const bind = nodes.map(node => ({ node, p: node.position.clone(), q: node.quaternion.clone(), s: node.scale.clone() }));
@@ -239,6 +250,9 @@ export function createModel() {
     pose.notes.forEach((note, i) => {
       keys[i].rotation.x = note.keyAngle;
       hammers[i].rotation.x = note.hammerAngle;
+      jacks[i].rotation.x = note.jackAngle;
+      strings[i].rotation.y = note.stringVibration * .60;
+      strings[i].position.y += note.stringVibration * .20;
       dampers[i].position.y += note.damperLift * .06;
       dampers[i].rotation.x = note.damperAngle;
     });

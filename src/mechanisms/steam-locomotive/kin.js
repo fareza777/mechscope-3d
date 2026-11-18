@@ -1,6 +1,16 @@
 // Designed stationary service demonstrator; metres, seconds, radians.
 export const TAU = Math.PI * 2;
 export const DEFAULT_INPUTS = Object.freeze({ cadence: 0.35, advance: 22 });
+export const TRACK_TRAVEL = 0.52;
+const smooth = t => t * t * (3 - 2 * t);
+export function travelAt(phase = 0) {
+  const p = ((Number(phase) % 1) + 1) % 1;
+  const start = .06, out = .34, hold = .58, back = .86;
+  if (p <= start || p >= back) return 0;
+  if (p < out) return TRACK_TRAVEL * smooth((p - start) / (out - start));
+  if (p <= hold) return TRACK_TRAVEL;
+  return TRACK_TRAVEL * (1 - smooth((p - hold) / (back - hold)));
+}
 export const D = Object.freeze({ axles: Object.freeze([-.34, .34, 1.02]), axleY: .50,
   wheelZ: .40, wheelRadius: .279, pitch: .68, crank: .14, conrod: .70,
   couplingZ: .515, conrodZ: .635, eccentric: .047, valveLength: .49, valveZ: .565,
@@ -27,9 +37,10 @@ export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
   });
   const residual = Math.max(...sides.flatMap(s => [Math.abs(distance(s.crank, s.crosshead) - D.conrod),
     Math.abs(distance(s.eccentricPin, s.valve) - D.valveLength), ...s.pins.slice(1).map((pin, i) => Math.abs(distance(pin, s.pins[i]) - D.pitch))]));
-  return { driveAngle, controls, sides, metrics: { axleRpm: controls.cadence * 60, pistonStrokeMm: 2 * D.crank * 1000,
+  const phase = ((driveAngle / TAU) % 1 + 1) % 1, travel = travelAt(phase);
+  return { driveAngle, phase, controls, sides, travel, metrics: { axleRpm: controls.cadence * 60, pistonStrokeMm: 2 * D.crank * 1000,
     advanceDeg: controls.advance, leftPistonMm: sides[0].piston[0] * 1000, rightPistonMm: sides[1].piston[0] * 1000,
-    valvePositionMm: sides[0].valve[0] * 1000, closureErrorMm: residual * 1000, translationM: 0 } };
+    valvePositionMm: sides[0].valve[0] * 1000, closureErrorMm: residual * 1000, translationM: travel } };
 }
 export function sample(t = 0, input = DEFAULT_INPUTS) {
   const time = Number.isFinite(t) ? t : 0, phase = phaseOf(time, cycleHz(input));

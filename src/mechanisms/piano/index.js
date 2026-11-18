@@ -2,8 +2,8 @@ import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
 
 export const descriptor = {
   id: 'piano', title: 'HARMONIA P8', family: 'Concert Grand Automaton', collection: '027',
-  tagline: 'A playing keyboard, twenty-four hammer actions, dampers and a lifting concert lid.',
-  description: 'A player-grand anatomy study: fourteen white keys and ten black keys drive twenty-four hammer actions, dampers and three-wire string courses under a lifting concert lid. The play phrase, key rotation, hammer lift, damper lift and lid hinge are deterministic; string acoustics, action regulation, voicing and sound output are not simulated.',
+  tagline: 'A playing keyboard with twenty-four jack actions, an automatic swell pedal and a lifting concert lid.',
+  description: 'A player-grand anatomy study: fourteen white keys and ten black keys drive twenty-four hammer actions, jack linkages, dampers and three-wire string courses under a lifting concert lid. The phrase mixes a chromatic run and an overlapping chord, while an automatic swell pedal lifts the damper rail between key strokes. Key rotation, hammer lift, jack motion, damper lift and lid hinge are deterministic; string acoustics, action regulation, voicing and sound output are not simulated.',
   defaultInputs: DEFAULT_INPUTS,
   controls: [
     { key: 'cadence', label: 'Phrase tempo', min: 0.45, max: 2.0, step: 0.05, unit: 'Hz', precision: 2 },
@@ -19,8 +19,8 @@ export const descriptor = {
       text: 'Every key turns on a balance bushing at the rear key frame. The front falls by up to 61 mm while the back rises under the action. Fourteen white keys and ten black keys share the same lever geometry, so the black keys do not float above a different action. The phrase presses them in a fixed sequence.',
       fact: 'Key travel and the note layout are exact; touch weight, friction and repetition are not solved.', view: 'detail', mode: 'solid', explode: 0 },
     { title: 'Hammer and damper are separate outputs', short: 'Inspect the action rail',
-      text: 'Each hammer shank turns about a brass butt on the hammer rail and lifts a pale felt head toward its string. Each damper sits over its own course and lifts when its key is played. The sustain pedal lifts every damper together, while the key lift stays local to one note. No jack, repetition lever or escapement is modelled.',
-      fact: 'Hammer and damper motions are deterministic; the model does not reproduce let-off, aftertouch or hammer voicing.', view: 'side', mode: 'solid', explode: .14 },
+      text: 'Each hammer shank turns about a brass butt on the hammer rail and lifts a pale felt head toward its string. Each damper sits over its own course and lifts when its key is played. A visible jack and whippen turn under every key tail and a brass pivot carries the hammer butt. The sustain pedal lifts every damper together, while the key lift stays local to one note. No repetition lever or escapement is modelled.',
+      fact: 'Hammer, jack and damper motions are deterministic; the model does not reproduce let-off, aftertouch or hammer voicing.', view: 'side', mode: 'solid', explode: .14 },
     { title: 'Three wires per course, one plate', short: 'Follow the string fan',
       text: 'Each of the twenty-four courses carries three parallel wires from a front tuning pin over the bridge to a rear hitch pin. The bass courses reach further toward the tail, which is why the string fan widens behind the keyboard. A dark cast-iron plate and five brass struts carry the courses above the pale soundboard.',
       fact: 'Course count, wire spacing and the visible fan are exact geometry; tension, inharmonicity and tuning are not simulated.', view: 'top', mode: 'xray', explode: .24 },

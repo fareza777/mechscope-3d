@@ -2,8 +2,8 @@ import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
 
 export const descriptor = {
   id: 'excavator', title: 'TERRA X7', family: 'Hydraulic Excavator', collection: '025',
-  tagline: 'A heavy tracked excavator with a continuous dig, swing and dump duty cycle.',
-  description: 'A massive tracked hydraulic excavator: sixteen shoes per side travel a fixed stadium path, a deep upper house rotates on a visible slew column and bearing stack, and a 1,240 mm boom, 1,010 mm stick and four-bar bucket run a continuous dig, lift, swing, dump and return cycle. The trims bias that automatic cycle while every rigid link and hydraulic ram follows the sampled pin centres. Soil, force, stability, track slip and oil flow are not simulated.',
+  tagline: 'A heavy tracked excavator that shuttles across the ground through a dig, swing and dump duty cycle.',
+  description: 'A massive tracked hydraulic excavator: sixteen shoes per side travel a fixed stadium path, the complete machine shuttles 1.45 m forward and back on the ground, a deep upper house rotates on a visible slew column and bearing stack, and a 1,240 mm boom, 1,010 mm stick and four-bar bucket run a continuous dig, lift, swing, dump and return cycle. The trims bias that automatic cycle while every rigid link and hydraulic ram follows the sampled pin centres. The track belt advances with the measured ground distance instead of slipping in place. Soil, force, stability, track slip and oil flow are not simulated.',
   defaultInputs: DEFAULT_INPUTS,
   controls: [
     { key: 'cadence', label: 'Work cycle', min: 0.08, max: 0.35, step: 0.01, unit: 'Hz', precision: 2 },
@@ -12,15 +12,15 @@ export const descriptor = {
     { key: 'stick', label: 'Stick trim', min: 40, max: 110, step: 1, unit: '°', precision: 0 },
     { key: 'bucket', label: 'Bucket trim', min: 15, max: 75, step: 1, unit: '°', precision: 0 },
   ],
-  specs: [{ value: '16', label: 'SHOES / SIDE' }, { value: '04', label: 'BAR LINKAGE' }],
-  cycleLabel: 'DIG · SWING · DUMP', cycleHz,
+  specs: [{ value: '16', label: 'SHOES / SIDE' }, { value: '1.45', label: 'M TRAVEL' }],
+  cycleLabel: 'DIG · DRIVE · DUMP', cycleHz,
   sample: poseSample,
   lessons: [
     { title: 'The belt is a fixed stadium, not a stretchy loop', short: 'Follow a single shoe',
-      text: 'Each of the sixteen shoes per side rides the same stadium path: a bottom run, a front idler arc, a top run and a rear sprocket arc. The path length never changes, so every shoe keeps its pitch and returns to the same place after one cycle. Five road wheels, the tensioner, the idler and the drive sprocket are separate rotating parts inside a deeper track frame.',
+      text: 'Each of the sixteen shoes per side rides the same stadium path: a bottom run, a front idler arc, a top run and a rear sprocket arc. The path length never changes, so every shoe keeps its pitch and returns to the same place after one cycle. Five road wheels, the tensioner, the idler and the drive sprocket are separate rotating parts inside a deeper track frame. The belt advances with the 1.45 m ground shuttle and stops while the machine holds position.',
       fact: 'Track pitch and the 1,720 mm centre distance are exact; belt tension, wear and slip are not solved.', view: 'side', mode: 'solid', explode: 0 },
     { title: 'One duty cycle drives the whole arm', short: 'Dig, lift, swing and dump',
-      text: 'A single master phase moves smoothly through reach, dig, curl, lift, swing, dump and return. The boom, stick and bucket trims shift the centre of that automatic envelope instead of locking the arm to one pose. The 1,240 mm boom, 1,010 mm stick, 240 mm lever, 320 mm rocker and constant 380 mm link close exactly at every sampled phase.',
+      text: 'A single master phase moves smoothly through reach, dig, curl, lift, swing, dump and return. The complete machine also drives forward, holds while working and reverses; the boom, stick and bucket trims shift the centre of the automatic arm envelope instead of locking it to one pose. The 1,240 mm boom, 1,010 mm stick, 240 mm lever, 320 mm rocker and constant 380 mm link close exactly at every sampled phase.',
       fact: 'The display is a repeatable kinematic duty cycle; soil contact, load, balance and hydraulic force are not solved.', view: 'detail', mode: 'solid', explode: .14 },
     { title: 'Cylinders follow pins, not guessed geometry', short: 'Inspect the three rams',
       text: 'The boom ram runs from the house bracket to a pin on the boom underside. The stick ram runs from the boom top to the stick bracket. The bucket ram runs from the stick to the four-bar rocker. Each barrel ends at a calculated midpoint and each piston reaches the sampled pin, so the visible stroke changes with the arm pose without a telescoping error or a negative scale.',

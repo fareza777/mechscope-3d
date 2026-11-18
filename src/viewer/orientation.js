@@ -10,14 +10,11 @@ const facing = (y, x = 3.4, z = -4.6) => Object.freeze({
 });
 
 export const HOME_VIEWS = Object.freeze({
-  abyss: facing(1.8, 2.6, -5.0),
   centipede: facing(1.5, 1.8, -5.4),
-  cervus: facing(1.9, 2.6, -4.8),
   cobra: facing(2.3, 2.2, -5.2),
   crab: facing(.9, 1.8, -5.2),
   dragonfly: facing(2.3, 2.4, -5.0),
   hummingbird: facing(2.1, 2.2, -5.2),
-  mammut: facing(2.2, 2.6, -5.2),
   mantis: facing(2.2, 2.4, -4.9),
   'robot-fish': facing(1.75, 2.6, -5.0),
   scorpion: facing(1.4, 2.2, -5.2),

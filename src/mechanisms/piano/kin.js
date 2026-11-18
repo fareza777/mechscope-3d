@@ -42,14 +42,20 @@ export function pressAt(phase, index) {
 }
 export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
   const a = Number.isFinite(angle) ? angle : 0, controls = inputsOf(input), phase = wrap(a / TAU);
+  const pedalWave = .5 - .5 * Math.cos(TAU * phase);
+  const pedalValue = clamp(controls.pedal + .22 * pedalWave, 0, 1);
+  const chordSet = new Set([0, 4, 7, 12, 16, 19]);
   const notes = NOTES.map(note => {
-    const press = pressAt(phase, note.index) * controls.velocity;
-    const damper = Math.max(press * .86, controls.pedal * .92);
+    const run = pressAt(phase, note.index);
+    const chord = chordSet.has(note.index) ? .62 * Math.max(0, Math.sin(TAU * phase * 2)) : 0;
+    const press = Math.max(run, chord) * controls.velocity;
+    const damper = Math.max(press * .86, pedalValue * .92);
     return {
       ...note,
       press,
       keyAngle: press * .061,
       hammerAngle: -press * .52,
+      jackAngle: press * .19 + press * .018 * Math.sin(TAU * (phase * 4 + note.index * .21)),
       damperLift: damper,
       damperAngle: damper * .08,
       stringVibration: press * .018 * Math.sin(TAU * (phase * 18 + note.index * .37)),
@@ -64,11 +70,11 @@ export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
   const pressedCount = notes.filter(note => note.press > .02).length;
   return {
     driveAngle: a, phase, controls, notes, lid: { angle: lidAngle, deg: controls.lid, propEnd },
-    pedal: { value: controls.pedal, lift: controls.pedal * .92, angle: controls.pedal * .16 },
-    pedals: [0, 1, 2].map(index => ({ index, angle: controls.pedal * (index === 2 ? .20 : .13) })),
+    pedal: { value: pedalValue, lift: pedalValue * .92, angle: pedalValue * .16 },
+    pedals: [0, 1, 2].map(index => ({ index, angle: pedalValue * (index === 2 ? .20 : .13) })),
     metrics: {
       cadenceHz: controls.cadence, notes: notes.length, whiteKeys: NOTES.filter(note => !note.black).length,
-      pressed: pressedCount, velocity: controls.velocity, lidDeg: controls.lid, pedalLiftMm: controls.pedal * 92,
+      pressed: pressedCount, velocity: controls.velocity, lidDeg: controls.lid, pedalLiftMm: pedalValue * 92,
       stringCourses: notes.length, keyTravelMm: 61, actionResidualMm: 0,
     },
   };

@@ -21,16 +21,16 @@ An offline mechanical anatomy studio by **F7 Developer**, with thirty interactiv
 | DEXTRA H5 | Five-finger robotic hand, articulated knuckles and tendon drives |
 | ASTRA R9 | Nine-cylinder radial piston mechanism and timed valve gear |
 | ORBIT P3 | Three-planet epicyclic transmission and visible carrier drive |
-| TITAN S6 | Six-wheel steam locomotive, quartered cranks and coupling rods |
+| TITAN S6 | Six-wheel steam locomotive, rolling service travel, quartered cranks and coupling rods |
 | CHRONOS T3 | Open tourbillon movement, rotating cage and oscillating balance |
 | SENTINEL H9 | Bipedal exoskeleton, inverse-kinematic legs, ten articulated digits |
 | MAMMUT M4 | Four-legged mammoth, fourteen-link trunk and sixteen open ribs |
 | ABYSS S9 | Suspended shark, eighteen axial links and five gill stations per side |
 | CERVUS B6 | Stag beetle, six IK legs, 820 mm pincers and lifting elytra |
 | ASTRARIUM OR-9 | Eight-planet orrery, six moons and a tilting armillary |
-| TERRA X7 | Tracked excavator, four-bar bucket and three hydraulic rams |
+| TERRA X7 | Tracked excavator, ground shuttle, four-bar bucket and three hydraulic rams |
 | SPECULA O6 | Rotating dome, two-leaf slit and seven-segment telescope |
-| HARMONIA P8 | Player grand, 24 actions, dampers and a lifting lid |
+| HARMONIA P8 | Player grand, 24 hammer/jack actions, automatic pedals and a lifting lid |
 | FABER R6 | Six-axis robot arm, parallel gripper and conveyor cell |
 | DRACONIS D6 | Winged dragon: four digitigrade IK legs, folding membrane wings, 34 vertebrae and a six-act choreography |
 | EQUUS H8 | Deep-bodied dressage horse: four IK legs, arched neck, mane, plume and rear display |

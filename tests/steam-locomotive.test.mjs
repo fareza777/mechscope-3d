@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { descriptor } from '../src/mechanisms/steam-locomotive/index.js';
 import { createModel } from '../src/mechanisms/steam-locomotive/model.js';
-import { D, TAU, DEFAULT_INPUTS, inputsOf, cycleHz, sample, poseAt } from '../src/mechanisms/steam-locomotive/kin.js';
+import { D, TAU, DEFAULT_INPUTS, TRACK_TRAVEL, inputsOf, cycleHz, sample, poseAt, travelAt } from '../src/mechanisms/steam-locomotive/kin.js';
 
 const near = (a, b, e = 1e-9) => assert.ok(Math.abs(a - b) <= e, `${a} != ${b}`);
 const distance = (a, b) => Math.hypot(...a.map((v, i) => v - b[i]));
@@ -72,7 +72,7 @@ test('TITAN descriptor, two controls, five lessons and lazy factory satisfy the 
     assert.ok(l.title && l.short && l.text.length >= 180 && l.fact.length >= 35);
     assert.ok(['home', 'side', 'top', 'front', 'detail'].includes(l.view)); assert.ok(['solid', 'xray', 'cutaway'].includes(l.mode)); assert.ok(l.explode >= 0 && l.explode <= 1);
   }
-  assert.match(descriptor.description, /stationary/); assert.deepEqual(descriptor.sample(.3), sample(.3));
+  assert.match(descriptor.description, /rolls/); assert.deepEqual(descriptor.sample(.3), sample(.3));
   const model = await descriptor.createModel(); assert.ok(model.group.isGroup && model.pickables.length); model.dispose();
 });
 
@@ -88,7 +88,7 @@ test('quartered wheelsets and exact piston/valve/coupling rods close at all cont
       side.pins.forEach((pin, i) => { near(Math.hypot(pin[0] - D.axles[i], pin[1] - D.axleY), D.crank); if (i) near(distance(pin, side.pins[i - 1]), D.pitch); });
       assert.ok(side.piston[0] >= -1.551 && side.piston[0] <= -1.269);
     }
-    assert.ok(s.metrics.closureErrorMm < 1e-9); near(s.metrics.translationM, 0);
+    assert.ok(s.metrics.closureErrorMm < 1e-9); near(s.metrics.translationM, travelAt(n / 720)); assert.ok(s.metrics.translationM >= 0 && s.metrics.translationM <= TRACK_TRAVEL);
   }
   const a = poseAt(.3, { advance: -15 }), b = poseAt(.3, { advance: 45 });
   assert.deepEqual(a.sides[0].crank, b.sides[0].crank); assert.ok(distance(a.sides[0].valve, b.sides[0].valve) > .02);
@@ -114,15 +114,16 @@ test('rendered eye centers and continuous extended journals agree with the solve
     const all = primitives(model, id => /^(coupling|conrod|valverod|crankpin|crosshead|eccentric|piston)\./.test(id));
     for (const s of state.sides) {
       const own = id => all.filter(p => p.id === id);
+      const shift = point => [point[0] - state.travel, point[1], point[2]];
       for (const [id, endpoints, length] of [[`conrod.${s.id}`, [s.crank, s.crosshead], D.conrod], [`valverod.${s.id}`, [s.eccentricPin, s.valve], D.valveLength], ...[0, 1].map(i => [`coupling.${s.id}.${i}`, [s.pins[i], s.pins[i + 1]], D.pitch])]) {
         const eyes = own(id).filter(torus); assert.equal(eyes.length, 2);
         near(eyes[0].center.distanceTo(eyes[1].center), length, 3e-7);
-        eyes.forEach((eye, i) => near(distance(eye.center.toArray(), endpoints[i]), 0, 3e-7));
+        eyes.forEach((eye, i) => near(distance(eye.center.toArray(), shift(endpoints[i])), 0, 3e-7));
       }
       const shafts = [0, 1, 2].map(i => own(`crankpin.${i}.${s.side}`).find(brassCylinder));
       const mainBush = own(`conrod.${s.id}`).filter(brassCylinder)[0]; engages(shafts[0], mainBush);
       for (let i = 0; i < 2; i++) own(`coupling.${s.id}.${i}`).filter(brassCylinder).forEach((b, j) => engages(shafts[i + j], b));
-      const piston = own(`piston.${s.id}`).find(p => brassCylinder(p)); near(distance(piston.center.toArray(), s.piston), 0, 3e-7);
+      const piston = own(`piston.${s.id}`).find(p => brassCylinder(p)); near(distance(piston.center.toArray(), shift(s.piston)), 0, 3e-7);
       const valveBush = own(`valverod.${s.id}`).filter(brassCylinder)[0]; engages(own(`eccentric.${s.id}`).find(brassCylinder), valveBush);
     }
   }
@@ -170,10 +171,10 @@ test('useful assemblies survive low quality and buffer-derived budgets remain bo
   }
 }));
 
-test('rendered bounds preserve the stationary locomotive silhouette and safe grounded supports', () => withModel(model => {
+test('rendered bounds preserve the moving locomotive silhouette and safe grounded supports', () => withModel(model => {
   for (const advance of [-15, 45]) for (let i = 0; i < 12; i++) {
     model.update(poseAt(i * TAU / 12, { advance })); const b = bounds(model), size = b.getSize(new THREE.Vector3());
-    near(b.min.y, 0, 2e-7); assert.ok(size.x > 2.9 && size.x < 3.3); assert.ok(size.z > 1.25 && size.z < 1.6); assert.ok(b.max.y < 2.1);
+    near(b.min.y, 0, 2e-7); assert.ok(size.x > 2.9 && size.x < 3.9); assert.ok(size.z > 1.25 && size.z < 1.6); assert.ok(b.max.y < 2.1);
     for (const p of primitives(model, id => id.startsWith('wheel.'))) {
       const vertex = new THREE.Vector3();
       for (let k = 0; k < p.geometry.attributes.position.count; k++) {

@@ -118,6 +118,7 @@ test('TERRA X7: boom, stick, bucket and four-bar link lengths stay exact through
   assert.equal(excavator.inputsOf({ bucket: 999 }).bucket, 75);
   const repeated = excavator.sample(.317 + 1 / d.cadence, d);
   near(repeated.tracks.travel, s.tracks.travel, 1e-12);
+  near(repeated.tracks.distance, s.tracks.distance, 1e-12);
 });
 
 test('SPECULA O6: telescope links, seven mirrors, shutter hinges and scanning dome stay exact', () => {

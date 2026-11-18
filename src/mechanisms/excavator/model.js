@@ -543,8 +543,8 @@ export function createModel() {
       record.node.position.set(record.side * D.trackX, D.trackY + path.y, path.z);
       record.node.rotation.set(path.angle, 0, 0);
     }
-    for (const record of wheels) record.node.rotation.x = -pose.phase * TAU * record.ratio;
-    for (const record of rollers) record.node.rotation.x = -pose.phase * TAU * 2.1;
+    for (const record of wheels) record.node.rotation.x = -pose.tracks.travel * TAU * record.ratio;
+    for (const record of rollers) record.node.rotation.x = -pose.tracks.travel * TAU * 2.1;
     for (const record of cylinders) {
       const data = pose.cylinders.find(item => item.id === record.id);
       if (!data) continue;
@@ -556,14 +556,22 @@ export function createModel() {
         record.node.scale.y = Math.max(1e-5, Math.hypot(data.end[0] - data.mid[0], data.end[1] - data.mid[1], data.end[2] - data.mid[2]));
       }
     }
+    // Sync local instance matrices with the root at the origin, then apply the
+    // ground shuttle once at the root so the belt and model never double-move.
+    kit.group.position.set(0, 0, 0);
+    kit.group.updateMatrixWorld(true);
     kit.sync(options);
+    kit.group.position.z = pose.tracks.distance;
+    kit.group.userData.travel = pose.tracks.distance;
   }
   update(lastState);
   const framePoints = [], seen = new Set(), sampleMatrix = new THREE.Matrix4(), samplePoint = new THREE.Vector3();
   for (let i = 0; i <= 16; i++) {
-    update(sample(i / 16 / cycleHz(DEFAULT_INPUTS), DEFAULT_INPUTS), { quality: 'balanced', mode: 'solid', explode: 0 });
+    const state = sample(i / 16 / cycleHz(DEFAULT_INPUTS), DEFAULT_INPUTS);
+    update(state, { quality: 'balanced', mode: 'solid', explode: 0 });
     for (const mesh of kit.pickables) for (let j = 0; j < mesh.count; j++) {
       mesh.getMatrixAt(j, sampleMatrix); samplePoint.setFromMatrixPosition(sampleMatrix);
+      samplePoint.z += state.tracks.distance;
       const key = `${samplePoint.x.toFixed(4)},${samplePoint.y.toFixed(4)},${samplePoint.z.toFixed(4)}`;
       if (seen.has(key)) continue;
       seen.add(key); framePoints.push(samplePoint.clone());

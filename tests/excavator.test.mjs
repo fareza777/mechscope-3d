@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { descriptor } from '../src/mechanisms/excavator/index.js';
-import { D, DEFAULT_INPUTS, sample, poseAt, workCycle, inputsOf, distance } from '../src/mechanisms/excavator/kin.js';
+import { D, DEFAULT_INPUTS, TRACK_PERIMETER, sample, poseAt, travelAt, workCycle, inputsOf, distance } from '../src/mechanisms/excavator/kin.js';
 
 const near = (a, b, eps = 1e-9, message = '') => assert.ok(Math.abs(a - b) <= eps, `${message} ${a} != ${b}`);
 const finite = value => {
@@ -72,6 +72,15 @@ test('TERRA X7: exact links, automatic duty cycle and bounded trims', () => {
   near(loop.house.slewDeg, a.house.slewDeg, 1e-9);
   near(workCycle(0).yaw, workCycle(1).yaw, 1e-12);
   for (const key of ['yaw', 'boom', 'stick', 'bucket']) near(workCycle(.999999)[key], workCycle(0)[key], .01);
+  assert.equal(travelAt(0), 0);
+  assert.equal(travelAt(1), 0);
+  assert.ok(travelAt(.45) > 1.4, 'the machine reaches its forward shuttle');
+  const driving = sample(.45 * period());
+  near(driving.tracks.distance, D.travelMeters, 1e-9);
+  near(driving.tracks.travel, -D.travelMeters / TRACK_PERIMETER, 1e-9);
+  near(driving.metrics.travelM, D.travelMeters, 1e-9);
+  const home = sample(.95 * period());
+  near(home.tracks.distance, 0, 1e-9);
 });
 
 test('TERRA X7: massive anatomy, cab riser and visible slew column', async () => {
@@ -96,6 +105,11 @@ test('TERRA X7: massive anatomy, cab riser and visible slew column', async () =>
     assert.ok(model.stats.instances >= 800 && model.stats.instances <= 1500, `instances ${model.stats.instances}`);
     assert.ok(model.stats.triangles >= 35000 && model.stats.triangles <= 100000, `triangles ${model.stats.triangles}`);
     assert.ok(model.stats.drawCalls <= 35, `draws ${model.stats.drawCalls}`);
+    const driving = descriptor.sample(.45 * period());
+    model.update(driving, { quality: 'balanced', mode: 'solid', explode: 0 });
+    near(model.group.position.z, driving.tracks.distance, 1e-9, 'root shuttle');
+    assert.ok(model.framePoints.some(point => point.z > 2.5), 'camera envelope includes the forward shuttle');
+    model.update(state, { quality: 'balanced', mode: 'solid', explode: 0 });
 
     const riser = partBounds(model, 'cab.riser'), cab = partBounds(model, 'cab.frame'), platform = partBounds(model, 'house.platform');
     assert.ok(!riser.isEmpty() && !cab.isEmpty() && !platform.isEmpty());
@@ -154,9 +168,12 @@ test('TERRA X7: automatic arm, tracks and accessories move; static blade remains
     assert.notEqual(model.group.getObjectByName('engine.fan').rotation.z, fan, 'cooling fan spins');
     assert.notEqual(model.group.getObjectByName('cab.beacon').rotation.y, 0, 'beacon rotor turns');
 
-    model.update(descriptor.sample(.12 * period()), { quality: 'balanced', mode: 'solid', explode: 0 });
+    const repeatedState = descriptor.sample(.12 * period());
+    model.update(repeatedState, { quality: 'balanced', mode: 'solid', explode: 0 });
     assert.deepEqual(tip('boom.beam'), first.boom, 'repeated pose restores the arm exactly');
-    assert.deepEqual(model.group.position.toArray(), [0, 0, 0]);
+    assert.equal(model.group.position.x, 0);
+    assert.equal(model.group.position.y, 0);
+    near(model.group.position.z, repeatedState.tracks.distance, 1e-12);
     assert.deepEqual(model.group.quaternion.toArray(), [0, 0, 0, 1]);
   } finally { model.dispose(); }
 });

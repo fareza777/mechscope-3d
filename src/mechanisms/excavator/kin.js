@@ -7,7 +7,7 @@ export const D = Object.freeze({
   trackX: 0.64, trackY: 0.39, trackHalf: 0.86, trackRadius: 0.315, shoeCount: 16,
   houseY: 0.92, boomPivot: Object.freeze([0, 1.09, 0.36]), boomLength: 1.24, stickLength: 1.01,
   bucketLength: 0.46, rockerLength: 0.32, linkLength: 0.38, leverLength: 0.24,
-  bladeZ: 1.42, bladeY: 0.21,
+  bladeZ: 1.42, bladeY: 0.21, travelMeters: 1.45,
 });
 const clamp = (v, lo, hi, fallback) => Math.min(hi, Math.max(lo, Number.isFinite(v) ? v : fallback));
 export const wrap = value => ((value % 1) + 1) % 1;
@@ -42,6 +42,17 @@ const DUTY_KEYS = Object.freeze([
   { p: 1.00, yaw: -6, boom: -9, stick: -26, bucket: -26 },
 ]);
 const smooth = t => t * t * (3 - 2 * t);
+export const TRACK_PERIMETER = 2 * (2 * D.trackHalf + Math.PI * D.trackRadius);
+// The machine drives forward, works, backs up and settles. The belt phase is
+// tied to the real ground distance so the shoes do not skate under the model.
+const DRIVE_START = .06, DRIVE_END = .34, REVERSE_START = .58, REVERSE_END = .86;
+export function travelAt(phase = 0) {
+  const p = wrap(Number.isFinite(phase) ? phase : 0);
+  if (p <= DRIVE_START || p >= REVERSE_END) return 0;
+  if (p < DRIVE_END) return D.travelMeters * smooth((p - DRIVE_START) / (DRIVE_END - DRIVE_START));
+  if (p <= REVERSE_START) return D.travelMeters;
+  return D.travelMeters * (1 - smooth((p - REVERSE_START) / (REVERSE_END - REVERSE_START)));
+}
 export function workCycle(phase = 0) {
   const p = wrap(Number.isFinite(phase) ? phase : 0);
   let a = DUTY_KEYS[0], b = DUTY_KEYS[DUTY_KEYS.length - 1];
@@ -88,6 +99,7 @@ export function trackPose(u = 0) {
 export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
   const a = Number.isFinite(angle) ? angle : 0, controls = inputsOf(input), phase = wrap(a / TAU);
   const duty = workCycle(phase);
+  const travelDistance = travelAt(phase), beltPhase = -travelDistance / TRACK_PERIMETER;
   const yaw = clamp(controls.slew + duty.yaw, -50, 50);
   const boomDeg = clamp(controls.boom + duty.boom, 18, 60);
   const foldDeg = clamp(controls.stick + duty.stick, 36, 112);
@@ -129,14 +141,14 @@ export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
     boom: { pivot, tip: boomTip, angle: boomAngle, deg: boomDeg },
     stick: { start: boomTip, end: stickTip, angle: stickAngle, foldDeg },
     bucket: { pivot: stickTip, tip: bucketTip, angle: bucketAngle, deg: bucketDeg, lever: leverPoint, rockerPivot, rockerEnd, anchor },
-    cylinders, tracks: { travel: phase, shoeCount: D.shoeCount },
+    cylinders, tracks: { travel: beltPhase, belt: beltPhase, distance: travelDistance, perimeter: TRACK_PERIMETER, shoeCount: D.shoeCount },
     blade: { centre: [0, D.bladeY, D.bladeZ], width: 1.34 },
     metrics: {
       cadenceHz: controls.cadence, slewDeg: yaw, boomDeg, stickDeg: foldDeg, bucketDeg,
       boomTrimDeg: controls.boom, stickTrimDeg: controls.stick, bucketTrimDeg: controls.bucket,
       boomMm: Math.round(D.boomLength * 1000), stickMm: Math.round(D.stickLength * 1000),
       reachMm: Math.round(Math.hypot(bucketTip[0], bucketTip[1] - .3, bucketTip[2]) * 1000),
-      bucketTipMm: Math.round(Math.hypot(bucketTip[0], bucketTip[1], bucketTip[2]) * 1000),
+      bucketTipMm: Math.round(Math.hypot(bucketTip[0], bucketTip[1], bucketTip[2]) * 1000), travelM: travelDistance, beltPhase,
       linkResidualMm: residual * 1000, contacts: 2,
     },
   };

@@ -1,9 +1,10 @@
+import * as THREE from 'three';
 import { createMechanicalKit } from '../mechanical-kit.js';
-import { D, TAU, sample, poseAt } from './kin.js';
+import { D, TAU, DEFAULT_INPUTS, cycleHz, sample, poseAt } from './kin.js';
 
 export function createModel() {
   const kit = createMechanicalKit('TITAN S6 · suspended workshop locomotive');
-  const nodes = [], wheels = [], sideLinks = [], engines = [];
+  const nodes = [], wheels = [], sideLinks = [], engines = [], pilotWheels = [], cabControls = [], springNodes = [];
   const add = kit.add, rod = kit.rod;
   let disposed = false, lastState = sample(0);
   function part(id, name, system, purpose, how, parent, explode = [0, .12, 0], material = 'Machined titanium, dark steel and brass') {
@@ -81,7 +82,8 @@ export function createModel() {
       add(jack, 'box', 'titanium', [x, .401, side * .285], [.17, .032, .11]);
       add(jack, 'box', 'dark', [x, .099, side * .30], [.18, .026, .105]);
       for (let k = 0; k < 5; k++) axial(jack, 'brass', [x, .245 + .018 * k, side * (.305 - .003 * k)], .030, .007, 'y', true);
-      const spring = part(`spring.${i}.${side}`, `${label} layered leaf spring`, 'Suspension', 'Shows the elastic suspension pack above each axlebox.', 'Six nested static leaf strips and two hanger eyes represent a preloaded pack; spring forces are not solved.', undefined, [0, .18, side * .1]);
+      const spring = part(`spring.${i}.${side}`, `${label} layered leaf spring`, 'Suspension', 'Shows the elastic suspension pack above each axlebox.', 'Six nested leaf strips and two hanger eyes flex as a visual spring pack; spring forces are not solved.', undefined, [0, .18, side * .1]);
+      springNodes.push(spring);
       for (let k = 0; k < 6; k++) {
         const length = .43 - k * .042, y = .686 - k * .012;
         for (const sign of [-1, 1]) rod(spring, k % 2 ? 'titanium' : 'dark', [x, y, side * .285], [x + sign * length / 2, y - .03, side * .285], .006);
@@ -250,26 +252,30 @@ export function createModel() {
   for (const x of [.59, .97, 1.37]) rod(roof, 'dark', [x, 1.78, -.44], [x, 1.78, .44], .014);
   for (let k = 0; k < 3; k++) {
     const control = part(`cab.control.${k}`, `Cab ${['regulator handwheel', 'pressure gauge', 'firedoor wheel'][k]}`, 'Cab controls', 'Provides a recognizable operator interface on the open firebox bulkhead.', 'A fine rim, radial spokes and rear plumbing depict the control without inventing a pressure reading.');
-    const y = 1.05 + k * .22, r = k === 1 ? .055 : .079;
-    add(control, 'ring', 'brass', [.62, y, k === 1 ? .14 : 0], [r, r, r], [0, Math.PI / 2, 0]);
+    const y = 1.05 + k * .22, r = k === 1 ? .055 : .079, z = k === 1 ? .14 : 0;
+    control.position.set(.62, y, z);
+    add(control, 'ring', 'brass', [0, 0, 0], [r, r, r], [0, Math.PI / 2, 0]);
     for (let j = 0; j < 6; j++) {
       const a = j * TAU / 6;
-      rod(control, 'titanium', [.62, y, k === 1 ? .14 : 0], [.62, y + r * Math.cos(a), (k === 1 ? .14 : 0) + r * Math.sin(a)], .005);
+      rod(control, 'titanium', [0, 0, 0], [0, r * Math.cos(a), r * Math.sin(a)], .005);
     }
-    rod(control, 'copper', [.60, y, .02], [.51, y - .08, .17], .007);
+    rod(control, 'copper', [-.02, 0, .02 - z], [-.11, -.08, .17 - z], .007);
+    cabControls.push(control);
   }
   const bogie = part('pilot.bogie', 'Front pilot bogie and bolster', 'Pilot truck', 'Locates the small leading wheels ahead of the main drivers.', 'The suspended pilot axle is attached to the front frame through a compact transverse yoke.');
   add(bogie, 'box', 'dark', [-1.31, .36, 0], [.27, .06, .52]);
   rod(bogie, 'titanium', [-1.31, .34, 0], [-1.19, .75, 0], .035);
   axial(bogie, 'titanium', [-1.31, .295, 0], .026, .65);
   for (const side of [-1, 1]) {
-    const pilot = part(`pilot.wheel.${side}`, `${side < 0 ? 'Near' : 'Far'} leading pilot wheel`, 'Pilot truck', 'Shows the small leading wheel pair beneath the smokebox.', 'The pilot wheel is stationary on the bench; no spurious rolling ratio is imposed on an unloaded axle.', undefined, [0, 0, side * .13]);
-    for (const dz of [-.019, .019]) add(pilot, 'ring', 'titanium', [-1.31, .295, side * .31 + dz], [.105, .105, .044]);
-    axial(pilot, 'dark', [-1.31, .295, side * .31], .033, .07);
+    const pilot = part(`pilot.wheel.${side}`, `${side < 0 ? 'Near' : 'Far'} leading pilot wheel`, 'Pilot truck', 'Shows the small leading wheel pair beneath the smokebox.', 'The pilot wheel rolls on its own axle at the common road speed; it is no longer a fixed display wheel.', undefined, [0, 0, side * .13]);
+    pilot.position.set(-1.31, .295, side * .31);
+    for (const dz of [-.019, .019]) add(pilot, 'ring', 'titanium', [0, 0, dz], [.105, .105, .044]);
+    axial(pilot, 'dark', [0, 0, 0], .033, .07);
     for (let j = 0; j < 8; j++) {
       const a = j * TAU / 8;
-      rod(pilot, 'dark', [-1.31, .295, side * .31], [-1.31 + .096 * Math.cos(a), .295 + .096 * Math.sin(a), side * .31], .009);
+      rod(pilot, 'dark', [0, 0, 0], [.096 * Math.cos(a), .096 * Math.sin(a), 0], .009);
     }
+    pilotWheels.push(pilot);
   }
   for (const [end, x] of [['front', -1.49], ['rear', 1.39]]) {
     const buffer = part(`buffer.${end}`, `${end === 'front' ? 'Front' : 'Rear'} buffer beam and coupler`, 'Railway fittings', 'Identifies the ends as a railway vehicle rather than an engine skid.', 'A narrow beam carries two buffer plates and a central open coupling eye.');
@@ -285,13 +291,21 @@ export function createModel() {
     add(lamp, 'sphere', 'lens', [x + sign * .045, 1.04, 0], [.018, .040, .040]);
     add(lamp, 'ring', 'brass', [x + sign * .050, 1.04, 0], [.044, .044, .044], [0, Math.PI / 2, 0]);
   }
+  const loco = new THREE.Group(); loco.name = 'moving-locomotive'; kit.assemblies.add(loco);
+  const fixedService = id => id.startsWith('rail.') || id.startsWith('jackbeam.') || id.startsWith('sleeper.');
+  for (const node of nodes) if (node.parent === kit.assemblies && !fixedService(node.userData.partId)) loco.add(node);
+
   const bind = nodes.map(node => ({ node, p: node.position.clone(), q: node.quaternion.clone() }));
   function update(state = lastState, options = {}) {
     if (disposed) return;
     if (state?.sides) lastState = state;
     else if (Number.isFinite(state?.driveAngle)) lastState = poseAt(state.driveAngle, lastState.controls);
     for (const { node, p, q } of bind) { node.position.copy(p); node.quaternion.copy(q); }
+    loco.position.x = -(lastState.travel || 0);
     for (const w of wheels) w.node.rotation.z = lastState.sides.find(s => s.side === w.side).theta;
+    pilotWheels.forEach((node, i) => { node.rotation.z = lastState.sides[0].theta + i * .12; });
+    cabControls.forEach((node, i) => { node.rotation.x = lastState.sides[0].theta * (i === 1 ? 2 : 1); });
+    springNodes.forEach((node, i) => { node.position.y = Math.sin(lastState.driveAngle * 2 + i * .7) * .004; });
     for (const item of sideLinks) {
       const s = lastState.sides.find(s => s.id === item.id); kit.aim(item.node, s.pins[item.i], s.pins[item.i + 1]);
     }
@@ -303,7 +317,18 @@ export function createModel() {
     kit.sync(options);
   }
   update();
-  return { group: kit.group, parts: kit.parts, stats: kit.stats, update,
+  const framePoints = [], seen = new Set(), matrix = new THREE.Matrix4(), point = new THREE.Vector3();
+  for (let i = 0; i <= 16; i++) {
+    update(sample(i / 16 / cycleHz(DEFAULT_INPUTS), DEFAULT_INPUTS), { quality: 'balanced', mode: 'solid', explode: 0 });
+    for (const mesh of kit.pickables) for (let j = 0; j < mesh.count; j++) {
+      mesh.getMatrixAt(j, matrix); point.setFromMatrixPosition(matrix);
+      const key = `${point.x.toFixed(4)},${point.y.toFixed(4)},${point.z.toFixed(4)}`;
+      if (seen.has(key)) continue;
+      seen.add(key); framePoints.push(point.clone());
+    }
+  }
+  update(lastState);
+  return { group: kit.group, parts: kit.parts, stats: kit.stats, update, framePoints,
     get pickables() { return disposed ? [] : kit.pickables; },
     dispose() { if (disposed) return; disposed = true; kit.dispose(); kit.group.clear(); },
   };
