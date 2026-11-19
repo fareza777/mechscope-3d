@@ -4,6 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { MECHANISMS } from '../src/catalog.js';
 
+const selectedId = process.env.MECHSCOPE_MECHANISM;
+const mechanisms = selectedId ? MECHANISMS.filter(model => model.id === selectedId) : MECHANISMS.slice(9);
+assert.ok(mechanisms.length, `Unknown mechanism: ${selectedId}`);
 const root = path.resolve(import.meta.dirname, '..');
 fs.mkdirSync(path.join(root, 'qa'), { recursive: true });
 const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true, args: ['--use-angle=d3d11'] });
@@ -46,7 +49,7 @@ try {
   });
   await page.goto(process.env.MECHSCOPE_URL || 'http://127.0.0.1:5174', { waitUntil: 'networkidle' });
   await page.waitForFunction(() => !!window.__mechscope, { timeout: 60000 });
-  for (const descriptor of MECHANISMS.slice(9)) {
+  for (const descriptor of mechanisms) {
     await page.evaluate(id => window.__mechscope.changeMechanism(id), descriptor.id);
     await page.evaluate(() => { window.__mechscope.seek(0); window.__mechscope.stage.view('home', true); });
     const record = { id: descriptor.id, scenarios: [] };

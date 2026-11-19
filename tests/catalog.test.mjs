@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { isDeepStrictEqual } from 'node:util';
 import { MECHANISMS } from '../src/catalog.js';
 
-const expected = ['arachne-sc08', 'crossplane-v8', 'strandbeest', 'cessna-gear', 'scorpion', 'dragonfly', 'mantis', 'octopus', 'robot-fish', 'crab', 'centipede', 'cobra', 'tortoise', 'hummingbird', 'robot-hand', 'radial-engine', 'planetary', 'steam-locomotive', 'tourbillon', 'sentinel', 'mammut', 'abyss', 'cervus', 'astrarium', 'excavator', 'observatory', 'piano', 'robot-cell', 'dragon', 'horse'];
+const expected = ['arachne-sc08', 'crossplane-v8', 'strandbeest', 'cessna-gear', 'scorpion', 'dragonfly', 'mantis', 'octopus', 'robot-fish', 'crab', 'centipede', 'cobra', 'tortoise', 'hummingbird', 'robot-hand', 'radial-engine', 'planetary', 'steam-locomotive', 'tourbillon', 'sentinel', 'mammut', 'abyss', 'cervus', 'astrarium', 'excavator', 'observatory', 'piano', 'robot-cell', 'dragon', 'horse', 'eurypterid', 'nautilus', 'grasshopper', 'pangolin'];
 const matrices = model => {
   model.group.updateMatrixWorld(true);
   return model.pickables.filter(mesh => mesh.count).map(mesh => {
@@ -19,9 +20,9 @@ const finite = value => {
   else if (value && typeof value === 'object') Object.values(value).forEach(finite);
 };
 
-test('thirty independently addressable offline mechanisms retain the original nine in order', () => {
+test('thirty-four independently addressable offline mechanisms retain the original nine in order', () => {
   assert.deepEqual(MECHANISMS.map(model => model.id), expected);
-  assert.equal(new Set(MECHANISMS.map(model => model.title)).size, 30);
+  assert.equal(new Set(MECHANISMS.map(model => model.title)).size, 34);
   for (const [i, descriptor] of MECHANISMS.entries()) {
     assert.equal(descriptor.collection, String(i + 1).padStart(3, '0'));
     assert.equal(descriptor.specs.length, 2);
@@ -79,10 +80,16 @@ for (const descriptor of MECHANISMS.slice(9)) {
       assert.deepEqual(pose, untouched, 'Rendering cannot mutate the sampled state');
       for (const control of descriptor.controls) {
         const minimum = { ...input, [control.key]: control.min }, maximum = { ...input, [control.key]: control.max };
-        const a = descriptor.sample(.317, minimum), b = descriptor.sample(.317, maximum);
-        finite(a); finite(b);
-        model.update(a); const minMatrices = matrices(model);
-        model.update(b); assert.notDeepEqual(matrices(model), minMatrices, `${control.key} changes rendered geometry`);
+        let changesGeometry = false;
+        // Gesture-specific controls may be inactive at the beginning of the choreography.
+        for (const phase of [.017, .144, .271, .398, .525, .652, .779, .886, .963]) {
+          const time = .317 + phase / descriptor.cycleHz(input);
+          const a = descriptor.sample(time, minimum), b = descriptor.sample(time, maximum);
+          finite(a); finite(b);
+          model.update(a); const minMatrices = matrices(model);
+          model.update(b); changesGeometry ||= !isDeepStrictEqual(matrices(model), minMatrices);
+        }
+        assert.ok(changesGeometry, `${control.key} changes rendered geometry during the cycle`);
       }
       const period = 1 / descriptor.cycleHz(input);
       model.update(descriptor.sample(.317 + period, input));

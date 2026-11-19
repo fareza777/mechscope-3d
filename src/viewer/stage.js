@@ -54,7 +54,7 @@ export function createStage(container, spider, onPick, invalidate = () => {}) {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(0, 0.55, 0);
   controls.enableDamping = true; controls.dampingFactor = 0.1;
-  controls.minDistance = 0.6; controls.maxDistance = 12;
+  controls.minDistance = 0.6; controls.maxDistance = spider.maxViewDistance ?? 12;
   controls.minPolarAngle = 0.06; controls.maxPolarAngle = Math.PI * 0.49;
   controls.enablePan = true; controls.panSpeed = 0.45;
   controls.rotateSpeed = 0.58; controls.zoomSpeed = 0.7;

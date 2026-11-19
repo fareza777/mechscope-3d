@@ -1,5 +1,26 @@
 # Verification and device evidence
 
+## Three additional automata: 19 November 2026
+
+Collections 032–034 add NAUTILUS N12 (185 assemblies, twelve eight-link tentacles and a filled chambered shell), SALTUS G6 (206 assemblies, six rigid IK legs and fourteen folding fan panels) and MANIS P12 (222 assemblies, fifty-six hinged trunk scales and twelve tail links). They perform prescribed periodic choreography, not fluid, ballistic, aerodynamic or contact-force simulation. MANIS braces and curls its tail; it does not roll into a ball.
+
+- Unit/integration suite: **363 tests, 362 passed, zero failed, one optional real-WebGL skip**. The three model suites cover finite periodic corner inputs, rigid node and uploaded-instance endpoints, floor clearance, substantial geometry, exact explosion reversal, complete Efficient anatomy and disposal.
+- Actual uploaded-instance motion is measured relative to mechanical parents at nine non-commensurate phases, including default inputs. Frozen and global-motion-only controls must fail. MANIS checks all 56 trunk hinges, rather than sampling only the centre scale in each row.
+- Translated, rotated and scaled scene placement is regression-tested against both actual uploaded endpoints and assembly nodes. New models upload root-local matrices so ancestor placement is not applied twice.
+- Control-effect validation now samples the whole choreography: Jump correctly preserves walking poses and changes airborne poses. SALTUS Efficient omits 36 fine rails while retaining every assembly. Armour changes MANIS's resting gap as well as its defensive opening.
+- All 34 entries passed the production Chrome collection QA: previous/next wrap, actual changing pixels and pause/step matrices, anatomy, material modes, explosion reversal, control limits, lessons and responsive layouts. After the final scene-placement correction, the rebuilt production bundle passed another **243 actual-vertex home-camera/floor checks** across nine phases at defaults and all eight input corners, plus material-mode and desktop captures; a collapsed-camera negative control was rejected. Mobile and desktop renders were visually inspected.
+- No 34-model APK/AAB was built or installed, and no new native Android performance claim is made. Earlier phone timings below remain historical evidence.
+
+## LEVIATHAN E12 addition: 19 November 2026
+
+Collection 031 adds a thick armoured sea-scorpion automaton with 215 selectable assemblies: six world-locked stance legs, two articulated toothed claws, two feathering oars, twelve rigid abdominal links, a diamond telson, hinged shield panels, scanning eyes, six mouth palps, ten gill fans, exposed gears, a nested rotor and eight telescoping rams. The default body shuttle spans 0.84 m peak-to-peak. This is prescribed kinematic choreography, not hydrodynamics, contact-force simulation or reconstructed animal anatomy.
+
+- Final unit/integration suite: **325 tests, 324 passed, zero failed, one optional real-WebGL skip**. The new model's 13 tests include 240-phase input-corner sweeps, exact rendered member and ram endpoints, stationary world-space stance contacts, actual-vertex floor clearance, positive matrices, substantial solid dimensions, quality/metadata preservation, explosion reversal and resource disposal.
+- Nine non-commensurate phases test angular or stroke excursion relative to each mechanical parent, using uploaded instance matrices. Frozen and root-translation-only negative controls must fail every named motion check; whole-body travel alone does not prove articulation.
+- All 31 entries passed the production desktop Chrome collection QA, including previous/next wrap, changing pixels, pause/step, anatomy, materials, explosion/reassembly, control limits, lessons and responsive layouts. The last new-model refinement increased foot lift from 190 to 240 mm; the full unit suite was repeated afterward. The final production model then passed 24 camera poses with a collapsed-camera negative control and another 27 actual-vertex framing/floor checks at default/minimum/maximum inputs.
+- The new model uses a geometry-corner camera envelope and an optional 24 m orbit limit; existing models retain their 12 m limit. Target its reproducible camera sweep with `MECHSCOPE_MECHANISM=eurypterid node scripts/pose-qa.mjs` against the built preview.
+- No current APK/AAB was built or installed in this addition, and no 31-model native Android performance claim is made. Desktop timings do not certify phone performance.
+
 ## Thirty-mechanism motion and horse verification: 18 November 2026
 
 EQUUS H8 (collection 030) was added, nine existing mechanisms were rebuilt for thicker silhouettes and continuous motion (SENTINEL H9, MAMMUT M4, ABYSS S9, CERVUS B6, SPECULA O6, FABER R6, CHRONOS T3, ORBIT P3 and TERRA X7), TITAN S6 and HARMONIA P8 received expanded motion, and the separate display decks under MAMMUT and CERVUS were removed so their feet meet the floor directly. TERRA X7 now shuttles 1.45 m over the ground with its belt tied to the measured travel; TITAN S6 rolls 0.52 m over its fixed service rails; the piano adds 24 jack linkages, an overlapping chord, automatic swell-pedal motion and vibrating string courses. The changes were verified against the final source and production bundle in desktop Chrome.
@@ -57,6 +78,10 @@ Measured from submitted instance buffers in the model tests; low tiers keep ever
 | FABER R6 | 180 | 1,187 | 69,720 | 34,980 | 29 |
 | ORBIT P3 | 196 | 2,135 | 88,920 | 61,368 | 20 |
 | EQUUS H8 | 120 | 924 | 43,392 | 30,072 | 24 |
+| LEVIATHAN E12 | 215 | 1,513 | 103,788 | 89,436 | 26 |
+| NAUTILUS N12 | 185 | 1,782 | 108,192 | 102,144 | 26 |
+| SALTUS G6 | 206 | 844 | 68,892 | 67,164 | 20 |
+| MANIS P12 | 222 | 873 | 53,304 | 52,920 | 21 |
 
 ### Historical native result: nine-mechanism APK
 

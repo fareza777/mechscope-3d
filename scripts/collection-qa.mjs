@@ -79,8 +79,8 @@ try {
   else await page.goto(process.env.MECHSCOPE_URL || 'http://127.0.0.1:5174', { waitUntil: 'networkidle' });
   await page.waitForFunction(() => !!window.__mechscope, { timeout: 60000 });
   const catalog = await page.evaluate(() => window.__mechscope.catalog);
-  assert.equal(catalog.length, 30, 'All thirty mechanisms are bundled offline');
-  assert.equal(new Set(catalog.map(model => model.id)).size, 30, 'Collection entries are unique');
+  assert.equal(catalog.length, 34, 'All thirty-four mechanisms are bundled offline');
+  assert.equal(new Set(catalog.map(model => model.id)).size, 34, 'Collection entries are unique');
   const [first, second] = catalog;
   await page.locator('#next-mechanism').click();
   await page.waitForFunction(id => window.__mechscope.state.mechanismId === id && !window.__mechscope.state.switching, second.id, { timeout: 60000 });
@@ -94,14 +94,14 @@ try {
   await page.waitForFunction(id => window.__mechscope.state.mechanismId === id && !window.__mechscope.state.switching, first.id, { timeout: 60000 });
   results.checks.push('On-screen previous/next controls step through the collection and wrap around');
   await page.locator('#collection-switch').click();
-  assert.equal(await page.locator('.collection-card').count(), 30, 'Every mechanism is reachable from the collection sheet');
+  assert.equal(await page.locator('.collection-card').count(), 34, 'Every mechanism is reachable from the collection sheet');
   await page.locator('#close-sheet').click();
   for (const { id, title } of catalog) {
     await page.locator('#collection-switch').click();
     await page.locator(`[data-mechanism="${id}"]`).click();
     await page.waitForFunction(id => window.__mechscope.state.mechanismId === id && !window.__mechscope.state.switching, id, { timeout: 60000 });
     assert.equal((await page.locator('#machine-name').innerText()).trim(), title, 'Header names the active mechanism');
-    assert.match(await page.locator('#machine-family').innerText(), /\/ 030$/, 'Header count matches the expanded collection');
+    assert.match(await page.locator('#machine-family').innerText(), /\/ 034$/, 'Header count matches the expanded collection');
     assert.equal(await page.locator('#viewport canvas').count(), 1, 'Only one live graphics canvas');
     await page.evaluate(() => { window.__mechscope.setPlaying(true); window.__mechscope.stage.view('home', true); });
     await page.waitForTimeout(1200);
