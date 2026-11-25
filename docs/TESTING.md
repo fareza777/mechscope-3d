@@ -1,5 +1,13 @@
 # Verification and device evidence
 
+## AQUILA TR-9 tilt-rotor: collection 035
+
+AQUILA TR-9 (108 assemblies, about 650 instances and 24k triangles at Balanced) runs a complete mission on one master phase. It unstows the wing, converts the nacelles, unfolds the blades, spins up, lifts off, retracts the gear, works the hoist, converts to cruise and flies a banked S-turn, then lands, folds and stows. This is prescribed kinematic choreography, not aerodynamic, thrust or flight-control simulation.
+
+- `npm test`: **368 tests, 367 passed, zero failed, one optional real-WebGL skip**.
+- `tests/tiltrotor.test.mjs` samples 400 phases at the default and both input corners. It covers exact 90 mm pitch-link lengths, swashplate planes through all three link feet, conversion and ramp actuator limits, tyres on the ground with oleo extension limited to the height gained, rotor-tip ground and cabin clearance, and rotation only with the blades unfolded. It also checks that whole-revolution rotor timing parks every blade at its start azimuth, that the gear stows inside the sponsons, that the open ramp rests on the ground, and that explosion reverses exactly.
+- `npm run build` passed, and `scripts/pose-qa.mjs` restricted to `tiltrotor` passed: 24 rendered poses fit the mobile home camera. Hover, cruise, parked and detail renders were visually inspected in desktop Chrome. The full 35-model `collection-qa.mjs` passed in desktop Chrome (every entry, including AQUILA TR-9). Android was not rerun, so no new native performance claim is made.
+
 ## Three additional automata: 19 November 2026
 
 Collections 032–034 add NAUTILUS N12 (185 assemblies, twelve eight-link tentacles and a filled chambered shell), SALTUS G6 (206 assemblies, six rigid IK legs and fourteen folding fan panels) and MANIS P12 (222 assemblies, fifty-six hinged trunk scales and twelve tail links). They perform prescribed periodic choreography, not fluid, ballistic, aerodynamic or contact-force simulation. MANIS braces and curls its tail; it does not roll into a ball.

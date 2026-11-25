@@ -1,6 +1,6 @@
 # MechScope 3D: How It Works
 
-An offline mechanical anatomy studio by **F7 Developer**, with thirty-four interactive mechanisms built from procedural geometry and deterministic kinematics. The flagship is **ARACHNE SC–08**, an original eight-legged robotic spider.
+An offline mechanical anatomy studio by **F7 Developer**, with thirty-five interactive mechanisms built from procedural geometry and deterministic kinematics. The flagship is **ARACHNE SC–08**, an original eight-legged robotic spider.
 
 | Mechanism | Focus |
 |---|---|
@@ -38,6 +38,7 @@ An offline mechanical anatomy studio by **F7 Developer**, with thirty-four inter
 | NAUTILUS N12 | Filled chambered spiral, twelve eight-link tentacles, service shutters and a phased jet-display heart |
 | SALTUS G6 | Jumping grasshopper: six IK legs, giant hind thighs, fourteen folding fan panels and a five-act hop |
 | MANIS P12 | Armoured pangolin: eight trunk vertebrae, 56 hinged scales, digging paws and a twelve-link curling tail |
+| AQUILA TR-9 | Tilt-rotor aircraft: wing stow, 90° nacelle conversion, six folding blades, solved swashplates, retracting gear, ramp, rescue hoist and a banked cruise |
 
 ## Release status
 
@@ -158,6 +159,6 @@ The same runner can attach to a **debug** MechScope Android WebView using an exp
 
 The target US base price for the permanent `remove_ads` product is **$4.99**, configured in Play Console. Checkout uses the localized price provided by Google Play; the UI does not fabricate a price or entitlement when configuration is missing. Restored purchases require a valid signature and correct package/product/state. Pending purchases are not granted. Signed acknowledged receipts support offline access but cannot detect refunds or account changes until reconnection.
 
-Consent is required before ads can be requested. Banners occupy a native container outside the viewer and above system-navigation insets. Interstitials are limited to a collection transition, never shown on first launch, and rate-limited to at least three minutes. Rewarded ads are explicitly requested and grant a 15-minute ad break in the current app session only from the SDK's earned-reward callback. They never change rendering quality or unlock settings. All thirty-four offline mechanisms remain available without watching an ad.
+Consent is required before ads can be requested. Banners occupy a native container outside the viewer and above system-navigation insets. Interstitials are limited to a collection transition, never shown on first launch, and rate-limited to at least three minutes. Rewarded ads are explicitly requested and grant a 15-minute ad break in the current app session only from the SDK's earned-reward callback. They never change rendering quality or unlock settings. All thirty-five offline mechanisms remain available without watching an ad.
 
 For production hardening, add a secure Play Developer API purchase-verification backend and real-time developer notifications, complete policy review and test actual purchase/cancellation/refund/restore flows on a Play test track.

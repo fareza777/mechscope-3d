@@ -1,0 +1,36 @@
+import { DEFAULT_INPUTS, cycleHz, sample as poseSample } from './kin.js';
+
+export const descriptor = {
+  id: 'tiltrotor', title: 'AQUILA TR-9', family: 'Tilt-Rotor Aircraft', collection: '035',
+  tagline: 'A tilt-rotor that unstows its wing, unfolds its blades, lifts off, hoists a rescue basket, converts to airplane mode, banks and folds itself away again.',
+  description: 'A complete tilt-rotor mission on one master phase. The wing turns 90° on a stow bearing driven by a pinion and a 36-tooth ring gear. Two nacelles tilt through 90° on conversion actuators. Six folding blades swing out on brass hinges. Both rotors spin up on whole-revolution timing, so the blades park at exactly the azimuth they started from. Each blade is pitched by a constant-length 90 mm pitch link, and the swashplate plane is solved through the three link feet. The aircraft lifts 1 m and retracts three gear legs behind opening doors. Over the open crew door the rescue hoist swings out and lowers a basket to 0.30 m above the ground. The nacelles then convert to airplane mode while the refuelling probe extends and the aircraft flies a coordinated banked S-turn on its flaperons and rudders. It then reconverts, lands, folds and stows. The oleo struts extend only as weight leaves the wheels. This is educational kinematic choreography, not a physical simulation: lift, thrust, download, mass, engine power, flight-control laws and ground effect are not simulated.',
+  defaultInputs: DEFAULT_INPUTS,
+  controls: [
+    { key: 'cadence', label: 'Mission cycle', min: 0.03, max: 0.09, step: 0.005, unit: 'Hz', precision: 3 },
+    { key: 'rotor', label: 'Rotor speed', min: 1.5, max: 5, step: 0.1, unit: 'rev/s', precision: 1 },
+    { key: 'hover', label: 'Hover height', min: 0.7, max: 1.3, step: 0.05, unit: 'm', precision: 2 },
+    { key: 'bank', label: 'Cruise bank', min: 0, max: 20, step: 1, unit: '°', precision: 0 },
+    { key: 'collective', label: 'Hover collective', min: 8, max: 16, step: 0.5, unit: '°', precision: 1 },
+  ],
+  specs: [{ value: '90°', label: 'NACELLE TILT' }, { value: '6', label: 'FOLDING BLADES' }],
+  cycleLabel: 'UNSTOW · HOVER · CRUISE · STOW', cycleHz,
+  sample: poseSample,
+  lessons: [
+    { title: 'One aircraft, two flying machines', short: 'Watch the nacelles convert',
+      text: 'With its nacelles vertical, the aircraft flies like a helicopter and its rotors lift it straight up. A conversion actuator on each wing-tip rib then pushes the nacelle forward through 90° until the rotors act as propellers and the wing carries the weight. The actuator is a fixed barrel and a fixed rod aimed at each other, and its length grows from 345 mm to 622 mm as the nacelle tilts. The flaperons droop in helicopter mode and flatten in airplane mode.',
+      fact: 'Conversion angle, actuator stroke and flaperon droop are exact sampled geometry. Wing lift, rotor thrust and the conversion corridor are not solved.', view: 'side', mode: 'solid', explode: 0 },
+    { title: 'Three links, one swashplate', short: 'Follow a pitch link',
+      text: 'Each blade grip has a pitch horn. A constant-length 90 mm pitch link joins that horn to the rotating swashplate below. Collective pitch raises all three horns together, and cyclic pitch raises one side more than the other. The swashplate plane is solved through the three link feet, so its height and tilt always agree with the blade angles. The brass rotating ring turns with the mast while the titanium stationary plate only tilts.',
+      fact: 'Pitch-link length is held exactly and the residual is reported live. Blade lift, flapping and coning are not simulated.', view: 'detail', mode: 'solid', explode: .1 },
+    { title: 'Folding a 4.4 m machine onto a deck', short: 'Fold, tilt and stow',
+      text: 'After landing, the rotors spin down on whole-revolution timing, so every blade stops at its parking azimuth. The blades fold 90° on brass hinges and lie along the nacelle like a closed umbrella. The nacelles then return to airplane mode, and a ten-tooth pinion drives the 36-tooth ring gear until the wing lies along the fuselage. Unstowing runs the same steps in reverse.',
+      fact: 'Fold, tilt and stow sequencing is deterministic. Blade clearances are checked at sampled poses, not by continuous collision detection.', view: 'top', mode: 'solid', explode: 0 },
+    { title: 'Inside the cowl: one drive train', short: 'X-ray the drive system',
+      text: 'Each turboshaft core spins inside its nacelle and drives a brass bull gear in the proprotor gearbox. From there the mast turns the hub. Titanium interconnect shafts run through the wing to a mid-wing gearbox, so either engine can turn both rotors. The shafts turn at three times rotor speed. The compressor face in each intake turns five times per rotor revolution, starting when the engine lights and stopping after the rotors are parked.',
+      fact: 'Gear ratios are visual integers chosen so the loop closes. Torque, power, temperatures and engine-out dynamics are not represented.', view: 'front', mode: 'xray', explode: .2 },
+    { title: 'What the aircraft model does not claim', short: 'Know the working limits',
+      text: 'The landing gear, gear doors, ramp, upper cargo door, crew door, rescue hoist, refuelling probe, sensor turret and beacons are kinematic representations. Each strut oleo extends only by the height gained, so the wheels never sink into the ground. The model does not simulate aerodynamics, rotor download, vortex ring state, centre of gravity, structural loads, fuel, avionics or real flight-control laws, and it is not a validated model of any production aircraft.',
+      fact: 'Every motion is a smooth envelope on one master phase, repeatable from any timestamp and identical on every loop.', view: 'home', mode: 'cutaway', explode: .4 },
+  ],
+  async createModel() { return (await import('./model.js')).createModel(); },
+};

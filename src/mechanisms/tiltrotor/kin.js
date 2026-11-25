@@ -12,14 +12,14 @@ export const D = Object.freeze({
   barrelLength: 0.33, rodLength: 0.33,
   nosePivot: Object.freeze([0, 0.38, 1.12]), noseStrut: 0.29,
   mainPivot: Object.freeze([0.31, 0.36, 0.25]), mainStrut: 0.27, stroke: 0.02, wheelRadius: 0.09,
-  rampHinge: Object.freeze([0, 0.27, -0.80]), rampLength: 0.66, rampClosed: 0.44, rampOpen: -Math.asin(0.27 / 0.66),
+  rampHinge: Object.freeze([0, 0.27, -0.80]), rampLength: 0.66, rampClosed: 0.44, rampOpen: -Math.asin(0.25 / 0.66),
   hoistPivot: Object.freeze([0.27, 0.92, 0.60]), hoistBoom: 0.24, basketClearance: 0.30,
 });
 // Timeline windows on the master phase. Every window is a smoothstep, so each
 // motion starts and stops with zero velocity and the loop closes exactly.
 export const T = Object.freeze({
   rampClose: [0.02, 0.08], doorClose: [0.03, 0.08], unstow: [0.06, 0.14], nacelleUp: [0.13, 0.19],
-  unfold: [0.18, 0.24], engineUp: [0.19, 0.25], spinUp: [0.22, 0.30], sweep: [0.20, 0.29], collectiveUp: [0.27, 0.33],
+  unfold: [0.18, 0.235], engineUp: [0.19, 0.25], spinUp: [0.235, 0.295], sweep: [0.20, 0.29], collectiveUp: [0.27, 0.33],
   lift: [0.29, 0.36], gearUp: [0.35, 0.41], doorOpen: [0.36, 0.39], hoistOut: [0.38, 0.41],
   cableDown: [0.41, 0.445], cableUp: [0.445, 0.48], hoistIn: [0.48, 0.505], doorShut: [0.50, 0.53],
   convert: [0.51, 0.58], climb: [0.52, 0.58], cruise: [0.57, 0.69], probeOut: [0.58, 0.61], probeIn: [0.66, 0.69],
@@ -147,7 +147,7 @@ export function poseAt(angle = 0, input = DEFAULT_INPUTS) {
   const gear = [
     { id: 'nose', pivot: D.nosePivot, length: D.noseStrut + strutExt, retract: (1 - f.gearDown) * Math.PI / 2 },
     ...[-1, 1].map(side => ({ id: side < 0 ? 'L' : 'R', side, pivot: [side * D.mainPivot[0], D.mainPivot[1], D.mainPivot[2]],
-      length: D.mainStrut + strutExt, retract: -(1 - f.gearDown) * Math.PI / 2 })),
+      length: D.mainStrut + strutExt, retract: (1 - f.gearDown) * Math.PI / 2 })),
   ].map(g => ({ ...g, axle: add(g.pivot, rotX([0, -g.length, 0], g.retract)), door: Math.min(1, f.gearDown * 2.5) }));
   const rampAngle = D.rampClosed + (D.rampOpen - D.rampClosed) * f.ramp;
   const rampTip = add(D.rampHinge, rotX([0, 0, -D.rampLength], rampAngle));

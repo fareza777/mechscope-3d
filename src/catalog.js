@@ -32,6 +32,7 @@ import { descriptor as eurypterid } from './mechanisms/eurypterid/index.js';
 import { descriptor as nautilus } from './mechanisms/nautilus/index.js';
 import { descriptor as grasshopper } from './mechanisms/grasshopper/index.js';
 import { descriptor as pangolin } from './mechanisms/pangolin/index.js';
+import { descriptor as tiltrotor } from './mechanisms/tiltrotor/index.js';
 
 export const MECHANISMS = Object.freeze([
   {
@@ -89,4 +90,5 @@ export const MECHANISMS = Object.freeze([
   nautilus,
   grasshopper,
   pangolin,
+  tiltrotor,
 ]);

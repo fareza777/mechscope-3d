@@ -312,7 +312,196 @@ export function createModel() {
     for (const x of [-.32, 0, .32]) { cyl(shaft, 'brass', [x, 0, 0], .024, .02, 'x'); box(shaft, 'dark', [x, .022, 0], [.016, .012, .012]); }
     shafts.push({ node: shaft, side: s });
     conversion.push({ side: s, ram: ram(`conversion.${id}`, `${label} conversion actuator`, 'Conversion system', 'Tilts the nacelle between airplane mode and helicopter mode.', wing, D.barrelLength, D.rodLength, .02) });
-    // @@NACELLE@@
+    // -------------------------------------------------------------- nacelle
+    const dir = s, base = s > 0 ? 0 : Math.PI;
+    const nac = group(wing, [s * D.nacelleX, 0, 0]); nac.name = `nacelle.frame.${id}`;
+    const shell = part(`nacelle.shell.${id}`, `${label} nacelle cowling`, 'Nacelle',
+      'Encloses the engine and proprotor gearbox and tilts as one unit through 90°.',
+      'A cylindrical cowl with a rounded tail, a teal band, panel seams, a navigation lens and an inboard spindle boss turns on the tip-rib bearing.', nac, [s * .14, 0, 0]);
+    cyl(shell, 'shell', [0, -.03, 0], .15, .66);
+    ell(shell, 'shell', [0, -.36, 0], [.15, .10, .15]);
+    cyl(shell, 'teal', [0, .17, 0], .153, .05);
+    cyl(shell, 'titanium', [-s * .16, 0, 0], .065, .06, 'x');
+    box(shell, 'lens', [s * .151, -.12, .06], [.008, .05, .03]);
+    for (const a of [0, 1, 2, 3]) box(shell, 'dark', [.151 * Math.cos(a * TAU / 4 + .4), -.05, .151 * Math.sin(a * TAU / 4 + .4)], [.006, .44, .006], [0, -(a * TAU / 4 + .4), 0], true);
+    const intake = part(`nacelle.intake.${id}`, `${label} engine intake`, 'Engine',
+      'Feeds air to the turboshaft engine through a screened side inlet.',
+      'A titanium lip ring and a dark plenum face sit on the outboard cowl ahead of the compressor.', nac, [s * .22, 0, 0], 'Titanium lip and dark plenum');
+    ringAt(intake, 'titanium', [s * .15, .14, 0], .07, 'x');
+    cyl(intake, 'dark', [s * .138, .14, 0], .066, .02, 'x');
+    const compressor = part(`nacelle.compressor.${id}`, `${label} compressor face`, 'Engine',
+      'Shows the gas-generator spool turning as soon as the engine starts.',
+      'Eight brass blades on a dark spinner rotate in the intake at five times the rotor revolutions per cycle.', nac, [s * .28, 0, 0], 'Brass blades and dark spinner');
+    compressor.position.set(s * .152, .14, 0);
+    add(compressor, 'cone', 'dark', [s * .012, 0, 0], [.02, .03, .02], [0, 0, -s * Math.PI / 2]);
+    for (let k = 0; k < 8; k++) { const a = k * TAU / 8; box(compressor, 'brass', [0, .036 * Math.cos(a), .036 * Math.sin(a)], [.006, .05, .016], [a, 0, 0]); }
+    const core = part(`nacelle.engineCore.${id}`, `${label} turboshaft core`, 'Engine',
+      'Represents the compressor and turbine spool spinning inside the cowling.',
+      'A copper spool and four brass bladed discs rotate about the nacelle axis; they are visible through the X-ray cowl and section cut.', nac, [s * .3, 0, 0], 'Copper spool and brass discs');
+    cyl(core, 'copper', [0, -.06, 0], .06, .40);
+    for (const y of [-.22, -.12, -.02, .08]) {
+      cyl(core, 'brass', [0, y, 0], .10, .012);
+      for (let k = 0; k < 4; k++) box(core, 'titanium', [.08 * Math.cos(k * TAU / 4), y, .08 * Math.sin(k * TAU / 4)], [.05, .016, .012], [0, -k * TAU / 4, 0], true);
+    }
+    const exhaust = part(`nacelle.exhaust.${id}`, `${label} exhaust and IR suppressor`, 'Engine',
+      'Discharges the engine exhaust away from the wing and mixes it with cool air.',
+      'A dark nozzle, six titanium mixer vanes and a copper lip close the tail of the nacelle.', nac, [0, -.16, 0], 'Heat-resistant alloy');
+    cyl(exhaust, 'dark', [0, -.47, 0], .075, .10);
+    ringAt(exhaust, 'copper', [0, -.52, 0], .07);
+    for (let k = 0; k < 6; k++) box(exhaust, 'titanium', [.045 * Math.cos(k * TAU / 6), -.50, .045 * Math.sin(k * TAU / 6)], [.04, .05, .006], [0, -k * TAU / 6, 0], true);
+    const gearbox = part(`nacelle.gearbox.${id}`, `${label} proprotor gearbox`, 'Drive system',
+      'Reduces engine speed to rotor speed and supports the mast.',
+      'A dark gearbox drum with a bolted top cover crowns the nacelle under the swashplate.', nac, [0, .1, 0], 'Cast magnesium gearbox');
+    cyl(gearbox, 'dark', [0, .34, 0], .12, .08);
+    for (let k = 0; k < 8; k++) add(gearbox, 'bolt', 'titanium', [.10 * Math.cos(k * TAU / 8), .382, .10 * Math.sin(k * TAU / 8)], [.008, .008, .008], [0, 0, 0], true);
+    const bull = part(`nacelle.bullGear.${id}`, `${label} gearbox bull gear`, 'Drive system',
+      'Carries rotor torque from the engine pinion to the mast.',
+      'A 24-tooth brass bull gear turns inside the cowling at three times rotor speed.', nac, [0, .06, 0], 'Bronze bull gear');
+    bull.position.set(0, .24, 0);
+    kit.gear(bull, .10, 24, .03, 'brass');
+    const swash = part(`rotor.swashplate.${id}`, `${label} stationary swashplate`, 'Rotor controls',
+      'Converts collective and cyclic commands into the tilt and height of the control plane.',
+      'A titanium plate on a dark sliding collar is positioned through the three pitch-link feet, so its tilt is solved, not drawn.', nac, [0, .05, 0], 'Titanium plate and dark collar');
+    cyl(swash, 'titanium', [0, 0, 0], .11, .016);
+    cyl(swash, 'dark', [0, -.03, 0], .045, .05);
+    box(swash, 'dark', [-s * .11, -.03, 0], [.02, .05, .02], [0, 0, 0], true);
+    const swashRot = part(`rotor.swashRotating.${id}`, `${label} rotating swashplate`, 'Rotor controls',
+      'Spins with the rotor and carries the lower ends of the pitch links.',
+      'A brass ring with three lugs rides on the stationary plate bearing and turns with the mast.', swash, [0, .05, 0], 'Bronze ring and lugs');
+    ringAt(swashRot, 'brass', [0, .014, 0], .10);
+    for (let i = 0; i < 3; i++) {
+      const p = [D.hornRadius, .014, -dir * D.hornLead], a = base + i * TAU / 3;
+      box(swashRot, 'brass', [p[0] * Math.cos(a) + p[2] * Math.sin(a), p[1], -p[0] * Math.sin(a) + p[2] * Math.cos(a)], [.025, .018, .025], [0, a, 0]);
+    }
+    const hub = group(nac, [0, D.hubHeight, 0]); hub.name = `rotor.frame.${id}`;
+    const hubPart = part(`rotor.hub.${id}`, `${label} proprotor hub and spinner`, 'Rotor',
+      'Carries three blades on a gimballed yoke and drives them from the mast.',
+      'A dark three-arm yoke, a titanium mast and nut and a pale spinner cone rotate together about the nacelle axis.', hub, [0, .1, 0], 'Titanium mast, dark yoke and composite spinner');
+    cyl(hubPart, 'titanium', [0, -.08, 0], .035, .16);
+    cyl(hubPart, 'dark', [0, 0, 0], .06, .06);
+    for (let i = 0; i < 3; i++) { const a = base + i * TAU / 3; box(hubPart, 'dark', [.05 * Math.cos(a), 0, -.05 * Math.sin(a)], [.08, .04, .05], [0, a, 0]); }
+    add(hubPart, 'cone', 'shell', [0, .09, 0], [.07, .12, .07]);
+    const blades = [], links = [];
+    for (let i = 0; i < 3; i++) {
+      const n = i + 1;
+      const az = group(hub); az.rotation.y = base + i * TAU / 3;
+      const grip = part(`rotor.grip.${id}${n}`, `${label} blade grip ${n}`, 'Rotor',
+        'Holds the blade root and turns it about its span axis to change pitch.',
+        'A titanium grip with a pitch horn and a brass fold hinge rotates in the yoke as the pitch link moves its horn.', az, [.06, 0, 0], 'Titanium grip and brass hinge');
+      cyl(grip, 'titanium', [.115, 0, 0], .028, .13, 'x');
+      box(grip, 'dark', [.10, -.01, -dir * .03], [.02, .02, .05]);
+      ell(grip, 'brass', [D.hornRadius, -D.hornDrop, -dir * D.hornLead], [.011, .011, .011]);
+      cyl(grip, 'brass', [D.hingeRadius, 0, 0], .02, .06, 'z');
+      const fold = group(grip, [D.hingeRadius, 0, 0]);
+      const blade = part(`rotor.blade.${id}${n}`, `${label} proprotor blade ${n}`, 'Rotor',
+        'Produces lift in helicopter mode and thrust in airplane mode, then folds for stowage.',
+        'A twisted, tapered composite blade with a brass erosion tip swings 90° on its hinge to lie along the nacelle when parked.', fold, [.14, 0, 0], 'Carbon composite with brass erosion cap');
+      box(blade, 'dark', [.06, 0, 0], [.12, .02, .08]);
+      box(blade, 'dark', [.24, 0, 0], [.25, .013, .085], [dir * .18, 0, 0]);
+      box(blade, 'dark', [.48, 0, 0], [.24, .011, .07], [dir * .08, 0, 0]);
+      box(blade, 'dark', [.665, 0, 0], [.14, .009, .056]);
+      box(blade, 'brass', [.75, 0, 0], [.03, .01, .05]);
+      box(blade, 'teal', [.60, .006, 0], [.03, .002, .06], [0, 0, 0], true);
+      const link = part(`rotor.pitchLink.${id}${n}`, `${label} pitch link ${n}`, 'Rotor controls',
+        'Transfers the swashplate height under each blade to that blade\'s pitch horn.',
+        'A constant-length 90 mm rod with brass rod ends joins a rotating-swashplate lug to the pitch horn; its length never changes.', nac, [0, .05, 0], 'Titanium rod with brass rod ends');
+      cyl(link, 'titanium', [0, D.linkLength / 2, 0], .007, D.linkLength);
+      for (const y of [0, D.linkLength]) ell(link, 'brass', [0, y, 0], [.012, .012, .012]);
+      blades.push({ grip, fold }); links.push(link);
+    }
+    nacelles.push({ side: s, nac, hub, swash, swashRot, blades, links, compressor, core, bull });
   }
-  // @@UPDATE@@
+  // ---------------------------------------------------------------- motion
+  const deg = Math.PI / 180, normal = new THREE.Vector3();
+  const rotXp = (v, a) => [v[0], v[1] * Math.cos(a) - v[2] * Math.sin(a), v[1] * Math.sin(a) + v[2] * Math.cos(a)];
+  const plus = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+  function update(state = lastState, options = {}) {
+    if (disposed) return;
+    if (state?.nacelles && state?.flight) lastState = state;
+    else if (Number.isFinite(state?.phase)) lastState = poseAt(state.phase * TAU, state.controls || lastState.controls || {});
+    const pose = lastState, f = pose.flight;
+    airframe.position.fromArray(pose.airframe.position);
+    airframe.rotation.set(pose.airframe.pitch, pose.airframe.yaw, pose.airframe.roll, 'YXZ');
+    wing.rotation.y = -pose.wing.stow;
+    ringGear.rotation.y = 0;
+    pinion.rotation.y = pose.wing.stow * (.18 / .05);
+    midGear.rotation.y = pose.rotorAngle * 3;
+    for (const record of shafts) record.node.rotation.x = pose.rotorAngle * 3;
+    for (const record of flaperons) record.node.rotation.x = -(record.side < 0 ? pose.flaperons.L : pose.flaperons.R) * deg;
+    elevator.rotation.x = -pose.elevatorDeg * deg;
+    for (const rudder of rudders) rudder.rotation.y = pose.rudderDeg * deg;
+    for (const record of conversion) {
+      const data = pose.nacelles.find(n => n.side === record.side);
+      telescope(record.ram, data.actuator.start, data.actuator.end);
+    }
+    for (const record of nacelles) {
+      const data = pose.nacelles.find(n => n.side === record.side);
+      record.nac.rotation.x = data.tilt;
+      record.hub.rotation.y = data.rotorAngle;
+      record.compressor.rotation.x = pose.spoolAngle * record.side;
+      record.core.rotation.y = pose.spoolAngle * record.side;
+      record.bull.rotation.y = -data.rotorAngle * 3;
+      record.swash.position.fromArray(data.swash.centre);
+      record.swash.quaternion.setFromUnitVectors(UP, normal.fromArray(data.swash.normal));
+      record.swashRot.rotation.set(0, data.rotorAngle, 0);
+      data.blades.forEach((blade, i) => {
+        record.blades[i].grip.rotation.x = data.dir * blade.pitch;
+        record.blades[i].fold.rotation.z = -blade.fold;
+        aim(record.links[i], blade.foot, blade.horn);
+      });
+    }
+    for (const g of pose.gear) {
+      const rec = gearParts[g.id];
+      rec.strut.rotation.x = g.retract;
+      rec.wheels.position.set(0, -g.length, 0);
+      for (const door of rec.doors) door.node.rotation.z = door.s * g.door * Math.PI / 2 * .92;
+      const anchor = g.side ? [g.side * D.mainPivot[0], .44, .50] : [0, .40, 1.30];
+      telescope(rec.actuator, anchor, plus(g.pivot, rotXp([0, -.12, 0], g.retract)));
+    }
+    ramp.rotation.x = pose.ramp.angle;
+    upperDoor.position.set(0, .88 + .02 * pose.ramp.upper, -1.10 + .22 * pose.ramp.upper);
+    upperDoor.rotation.x = -.785 + .735 * pose.ramp.upper;
+    rampRams.forEach((r, i) => {
+      const s = i ? 1 : -1;
+      telescope(r, [s * .20, .56, -.72], plus(D.rampHinge, plus([s * .20, 0, 0], rotXp([0, .03, -.30], pose.ramp.angle))));
+    });
+    crewDoor.position.set(.292 + .014 * pose.door, .52, .60 - .30 * pose.door);
+    hoistBoom.rotation.y = pose.hoist.swing;
+    cable.position.fromArray(pose.hoist.tip);
+    cable.scale.set(1, Math.max(1e-4, pose.hoist.cableLength), 1);
+    basket.position.fromArray(pose.hoist.basket);
+    probeTip.position.set(0, 0, .35 * pose.probe);
+    flir.rotation.set(pose.flir.tilt, pose.flir.yaw, 0, 'YXZ');
+    for (const b of beacons) b.node.rotation.y = pose.beacon * b.sign;
+    kit.group.updateMatrixWorld(true);
+    kit.sync(options);
+  }
+  update(lastState);
+  // Whole-mission camera envelope from instance bounding-box corners (rotor
+  // tips, raised hover and the banked cruise), merged on a 4 cm grid.
+  const framePoints = [], seen = new Set(), sampleMatrix = new THREE.Matrix4(), samplePoint = new THREE.Vector3();
+  const hoverInputs = { ...DEFAULT_INPUTS, hover: 1.3, bank: 20 };
+  for (let i = 0; i < 32; i++) {
+    update(sample(i / 32 / cycleHz(hoverInputs), hoverInputs), { quality: 'low', mode: 'solid', explode: 0 });
+    for (const mesh of kit.pickables) {
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+      const { min, max } = mesh.geometry.boundingBox;
+      for (let j = 0; j < mesh.count; j++) {
+        mesh.getMatrixAt(j, sampleMatrix);
+        for (const x of [min.x, max.x]) for (const y of [min.y, max.y]) for (const z of [min.z, max.z]) {
+          samplePoint.set(x, y, z).applyMatrix4(sampleMatrix);
+          const key = `${Math.round(samplePoint.x * 25)},${Math.round(samplePoint.y * 25)},${Math.round(samplePoint.z * 25)}`;
+          if (seen.has(key)) continue;
+          seen.add(key); framePoints.push(samplePoint.clone());
+        }
+      }
+    }
+  }
+  update(lastState);
+  return {
+    group: kit.group, update, parts: kit.parts, stats: kit.stats, framePoints, maxViewDistance: 24,
+    views: { home: [3.9, 2.5, 4.6], side: [6.2, 1.3, .3], top: [.1, 6.6, .2], front: [0, 1.5, 6.4], detail: [-3.6, 2.3, 3.9], exploded: [4.2, 3.1, 4.3] },
+    get pickables() { return disposed ? [] : kit.pickables; },
+    dispose() { if (disposed) return; disposed = true; kit.dispose(); kit.group.clear(); },
+  };
 }
